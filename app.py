@@ -25,6 +25,7 @@ def close_db(e=None):
 
 def init_db():
     """依 schema.sql 建表（第一次啟動或 schema 更新時呼叫）"""
+    os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
     conn = sqlite3.connect(DATABASE)
     with open(SCHEMA_PATH, encoding='utf-8') as f:
         conn.executescript(f.read())
