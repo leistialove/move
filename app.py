@@ -5,7 +5,7 @@ from flask import Flask, request, abort, jsonify, g
 
 # ===== SQLite 資料庫設定 =====
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-DATABASE    = r'D:/yolo/database/move.db'
+DATABASE = os.path.join(BASE_DIR, 'move.db')
 SCHEMA_PATH = os.path.join(BASE_DIR, 'schema.sql')
 
 def get_db():
