@@ -125,10 +125,4 @@ def get_table_data(table_name):
 
 # ===== 啟動 =====
 if __name__ == '__main__':
-    try:
-        import setup_richmenu
-        print("✅ Rich Menu 已自動初始化")
-    except Exception as e:
-        print("⚠️ Rich Menu 初始化失敗：", e)
-
     app.run(host='0.0.0.0', port=5000, debug=True)
