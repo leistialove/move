@@ -2,8 +2,11 @@
 import json
 import os
 from linebot.v3.messaging import (
-    Configuration, ApiClient, MessagingApi,
-    CreateRichMenuRequest, RichMenuArea, RichMenuBounds, RichMenuAction, RichMenuSize
+    Configuration, ApiClient, MessagingApi
+)
+from linebot.v3.messaging.models import (
+    CreateRichMenuRequest, RichMenuArea, RichMenuBounds,
+    RichMenuAction, RichMenuSize
 )
 
 # 讀 JSON
@@ -42,5 +45,6 @@ with ApiClient(config) as api_client:
         api.set_rich_menu_image(richmenu_id, f, content_type="image/png")
         print("✅ 圖片已上傳")
 
+    # 設為預設
     api.set_default_rich_menu(richmenu_id)
     print("✅ 設為預設 Rich Menu")
