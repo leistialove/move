@@ -80,6 +80,7 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
+    print("📩 收到 LINE 訊息")
     user_id   = event.source.user_id
     user_text = event.message.text
     bot_reply = f"你說：「{user_text}」"
