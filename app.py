@@ -71,10 +71,15 @@ handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 @app.route('/callback', methods=['POST'])
 def callback():
     signature = request.headers.get('X-Line-Signature', '')
-    body      = request.get_data(as_text=True)
+    body = request.get_data(as_text=True)
+
+    # 印出 webhook 原始內容（前 300 字）
+    print("📩 webhook body：", body[:300])
+
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
+        print("❌ LINE 簽名驗證失敗")
         abort(400, 'Invalid signature')
     return 'OK'
 
