@@ -62,11 +62,19 @@ def handle_message(event):
     user_text = event.message.text
     bot_reply = f"你說：「{user_text}」"
 
+    # 取得現在 UTC 時間
+    now = datetime.utcnow()
+
+    # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
+    doc_id = now.strftime("%Y%m%d%H%M%S%f")
+    # e.g. "20250513234530123456"
+
     # 儲存到 Firebase 的 chat_log 集合
     db.collection("chat_log")\
-        .document(user_id)\
-        .collection("messages")\
-        .add({
+      .document(user_id)\
+      .collection("messages")\
+      .document(doc_id)\
+      .set({
             "user_id": user_id,
             "user_text": user_text,
             "bot_reply": bot_reply,
