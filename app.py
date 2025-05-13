@@ -66,7 +66,7 @@ def handle_message(event):
     now = datetime.utcnow()
 
     # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
-    doc_id = now.strftime("%d%H%M%S%f") #"%Y%m%d%H%M%S%f"
+    doc_id = now.strftime("%d%H%M%S") #"%Y%m%d%H%M%S%f"
     # e.g. "20250513234530123456"
 
     # 儲存到 Firebase 的 chat_log 集合
