@@ -1,2 +1,4 @@
-Flask>=2.3.0
-line-bot-sdk==3.17.1
+Flask==2.3.3
+firebase-admin==6.4.0
+python-dotenv==1.0.1
+line-bot-sdk==3.4.0
