@@ -1,8 +1,0 @@
--- schema.sql
-CREATE TABLE IF NOT EXISTS chat_log (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  user_text TEXT NOT NULL,
-  bot_reply TEXT NOT NULL,
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-);
