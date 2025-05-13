@@ -34,7 +34,7 @@ from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
 LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
@@ -63,10 +63,10 @@ def handle_message(event):
     bot_reply = f"你說：「{user_text}」"
 
     # 取得現在 UTC 時間
-    now = datetime.utcnow()
+    now = datetime.utcnow() + timedelta(hours=8)
 
     # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
-    doc_id = now.strftime("%d%H%M%S") #"%Y%m%d%H%M%S%f"
+    doc_id = now.strftime("%d-%H:%M:%S") #"%Y%m%d%H%M%S%f"
     # e.g. "20250513234530123456"
 
     # 儲存到 Firebase 的 chat_log 集合
