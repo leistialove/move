@@ -63,12 +63,15 @@ def handle_message(event):
     bot_reply = f"你說：「{user_text}」"
 
     # 儲存到 Firebase 的 chat_log 集合
-    db.collection("chat_log").add({
-        "user_id": user_id,
-        "user_text": user_text,
-        "bot_reply": bot_reply,
-        "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
-    })
+    db.collection("chat_log")\
+        .document(user_id)\
+        .set({
+            "user_id": user_id,
+            "user_text": user_text,
+            "bot_reply": bot_reply,
+            "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
+        })
+
 
     # 回覆 LINE 使用者
     messaging_api.reply_message(
