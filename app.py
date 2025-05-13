@@ -1,44 +1,22 @@
-# apptest1.py
 import os
-import sqlite3
-from flask import Flask, request, abort, jsonify, g
+from flask import Flask, request, abort, jsonify
+from dotenv import load_dotenv
 
-# ===== SQLite 資料庫設定 =====
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, 'move.db')
-SCHEMA_PATH = os.path.join(BASE_DIR, 'schema.sql')
+# === 載入 .env 環境變數（可選）===
+load_dotenv()
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(
-            DATABASE,
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        db.row_factory = sqlite3.Row
-    return db
+# ===== Firebase Firestore 設定 =====
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-def close_db(e=None):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+cred = credentials.Certificate("movedetection-4f3dc-firebase-adminsdk-fbsvc-f3cd2ec71c.json")  # 你的 Firebase 金鑰檔案
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-def init_db():
-    """依 schema.sql 建表（第一次啟動或 schema 更新時呼叫）"""
-    os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
-    conn = sqlite3.connect(DATABASE)
-    with open(SCHEMA_PATH, encoding='utf-8') as f:
-        conn.executescript(f.read())
-    conn.commit()
-    conn.close()
-
-# ===== Flask App & 自動建表 =====
+# ===== Flask App =====
 app = Flask(__name__)
-with app.app_context():
-    init_db()
-app.teardown_appcontext(close_db)
 
-# ===== LINE Bot v3 SDK 正確 Import =====
+# ===== LINE Bot v3 SDK 設定 =====
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import (
@@ -53,52 +31,40 @@ from linebot.v3.webhooks import (
     TextMessageContent
 )
 
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv(
-    'LINE_CHANNEL_ACCESS_TOKEN',
-    '你的 Channel Access Token'
-)
-LINE_CHANNEL_SECRET = os.getenv(
-    'LINE_CHANNEL_SECRET',
-    '你的 Channel Secret'
-)
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
+LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
 
-# 建立 v3 client 與 handler
 config        = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 
+# ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
 def callback():
     signature = request.headers.get('X-Line-Signature', '')
-    body = request.get_data(as_text=True)
-
-    # 印出 webhook 原始內容（前 300 字）
-    print("📩 webhook body：", body[:300])
-
+    body      = request.get_data(as_text=True)
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        print("❌ LINE 簽名驗證失敗")
         abort(400, 'Invalid signature')
     return 'OK'
 
+# ===== 處理使用者訊息並存入 Firebase =====
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
-    print("📩 收到 LINE 訊息")
     user_id   = event.source.user_id
     user_text = event.message.text
     bot_reply = f"你說：「{user_text}」"
 
-    # 寫入 chat_log
-    db = get_db()
-    db.execute(
-        "INSERT INTO chat_log (user_id, user_text, bot_reply) VALUES (?, ?, ?)",
-        (user_id, user_text, bot_reply)
-    )
-    db.commit()
+    # 儲存到 Firebase 的 chat_log 集合
+    db.collection("chat_log").add({
+        "user_id": user_id,
+        "user_text": user_text,
+        "bot_reply": bot_reply
+    })
 
-    # v3 回覆
+    # 回覆 LINE 使用者
     messaging_api.reply_message(
         ReplyMessageRequest(
             reply_token=event.reply_token,
@@ -106,29 +72,32 @@ def handle_message(event):
         )
     )
 
-# ===== Flask API：列表 & 取資料 =====
+# ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
-def list_tables():
-    db = get_db()
-    cursor = db.execute(
-        "SELECT name FROM sqlite_master "
-        "WHERE type='table' AND name NOT LIKE 'sqlite_%';"
-    )
-    tables = [r['name'] for r in cursor.fetchall()]
-    return jsonify(tables)
+def list_collections():
+    collections = db.collections()
+    names = [col.id for col in collections]
+    return jsonify(names)
 
-@app.route('/data/<table_name>', methods=['GET'])
-def get_table_data(table_name):
-    if not table_name.isidentifier():
-        abort(400, 'Invalid table name')
-    db = get_db()
+# ===== API：取得 chat_log 的前 100 筆資料（模擬 /data/<table_name>）=====
+@app.route('/data/<collection_name>', methods=['GET'])
+def get_collection_data(collection_name):
+    if not collection_name.isidentifier():
+        abort(400, 'Invalid collection name')
+
     try:
-        cursor = db.execute(f"SELECT * FROM {table_name} LIMIT 100")
-    except sqlite3.OperationalError:
-        abort(404, f"Table `{table_name}` not found")
-    data = [dict(r) for r in cursor.fetchall()]
-    return jsonify(data)
+        docs = db.collection(collection_name).limit(100).stream()
+    except Exception:
+        abort(404, f"Collection `{collection_name}` not found")
 
-# ===== 啟動 =====
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        data['id'] = doc.id
+        results.append(data)
+
+    return jsonify(results)
+
+# ===== 啟動應用程式 =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
