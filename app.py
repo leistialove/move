@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, abort, jsonify
 from dotenv import load_dotenv
 
@@ -9,7 +10,10 @@ load_dotenv()
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-cred = credentials.Certificate("movedetection-4f3dc-firebase-adminsdk-fbsvc-f3cd2ec71c.json")  # 你的 Firebase 金鑰檔案
+# 從環境變數載入 Firebase 金鑰 JSON
+firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
+key_dict = json.loads(firebase_json)
+cred = credentials.Certificate(key_dict)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -32,7 +36,7 @@ from linebot.v3.webhooks import (
 )
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
-LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
+LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
 
 config        = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 api_client    = ApiClient(config)
