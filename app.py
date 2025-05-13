@@ -34,6 +34,7 @@ from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
 )
+from datetime import datetime
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
 LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
@@ -65,7 +66,8 @@ def handle_message(event):
     db.collection("chat_log").add({
         "user_id": user_id,
         "user_text": user_text,
-        "bot_reply": bot_reply
+        "bot_reply": bot_reply,
+        "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
     })
 
     # 回覆 LINE 使用者
