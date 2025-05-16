@@ -1,14 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>Firebase Collections</title>
+  <meta charset="UTF-8">
+  <title>Firebase Collections</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    a { text-decoration: none; color: #007bff; }
+    li { margin-bottom: 8px; }
+  </style>
 </head>
 <body>
-    <h2>可用的 Firebase Collections：</h2>
-    <ul>
-        {% for col in collections %}
-            <li><a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a></li>
-        {% endfor %}
-    </ul>
+  <h2>可用的 Firebase Collections：</h2>
+  <ul>
+    {% for col in collections %}
+      <li><a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a></li>
+    {% endfor %}
+  </ul>
 </body>
 </html>
