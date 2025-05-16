@@ -10,13 +10,13 @@ load_dotenv()
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-'''# 從環境變數載入 Firebase 金鑰 JSON
+# 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
 key_dict = json.loads(firebase_json)
 cred = credentials.Certificate(key_dict)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-'''
+
 # ===== Flask App =====
 app = Flask(__name__)
 
