@@ -70,6 +70,14 @@ def handle_message(event):
     # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
     doc_id = now.strftime("%d-%H:%M:%S") #"%Y%m%d%H%M%S%f"
     # e.g. "20250513234530123456"
+    
+    # 1) 先在 chat_log 底下建立或更新這個 user_id 的文件
+    db.collection("chat_log") \
+      .document(user_id) \
+      .set(
+          {"last_update": now},   # 你想存的欄位都可以放這裡
+          merge=True              # merge=True 表示不會覆蓋掉子集合
+      )
 
     # 儲存到 Firebase 的 chat_log 集合
     db.collection("chat_log")\
