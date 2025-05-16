@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head><meta charset="UTF-8"><title>Messages in {{ collection }}/{{ doc_id }}</title></head>
+<body>
+  <h2>Collection: {{ collection }} / Document: {{ doc_id }}</h2>
+  <table border="1">
+    <tr>
+      {% for key in messages[0].keys() %}<th>{{ key }}</th>{% endfor %}
+      <th>刪除</th>
+    </tr>
+    {% for msg in messages %}
+      <tr>
+        {% for v in msg.values() %}<td>{{ v }}</td>{% endfor %}
+        <td>
+          <a href="{{ url_for('delete_subdoc', collection=collection, doc_id=doc_id, subcol='messages', subdoc=msg['id']) }}">刪除</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  <p><a href="{{ url_for('view_collection', collection=collection) }}">← 回 Document 列表</a></p>
+</body>
+</html>
