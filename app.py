@@ -125,15 +125,34 @@ def view_collection(collection):
 
 @app.route('/firebase/view/<collection>/<doc_id>')
 def view_messages(collection, doc_id):
-    msgs = db.collection(collection).document(doc_id)\
-             .collection('messages').stream()
-    records = [{'id': m.id, **m.to_dict()} for m in msgs]
-    return render_template(
-        'firebase_messages.html',
-        collection=collection,
-        doc_id=doc_id,
-        messages=records
-    )
+    try:
+        # 1. 讀 messages 子集合
+        docs = db.collection(collection)\
+                 .document(doc_id)\
+                 .collection('messages')\
+                 .stream()
+        
+        records = []
+        for m in docs:
+            data = m.to_dict()
+            ts = data.get('timestamp')
+            # 如果有 timestamp，轉成 UTC+8
+            if hasattr(ts, 'tzinfo') or isinstance(ts, datetime):
+                # Firestore 回傳的 timestamp 通常是帶 tzinfo 的 datetime
+                local = ts + timedelta(hours=8)
+                # 轉成字串，去掉微秒跟時區標誌
+                data['timestamp'] = local.strftime("%Y-%m-%d %H:%M:%S")
+            
+            records.append({'id': m.id, **data})
+        
+        return render_template(
+            'firebase_messages.html',
+            collection=collection,
+            doc_id=doc_id,
+            messages=records
+        )
+    except Exception as e:
+        return f"讀取失敗：{e}", 500
 
 @app.route('/firebase/delete/<collection>/<doc_id>/messages/<msg_id>')
 def delete_message(collection, doc_id, msg_id):
