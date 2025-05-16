@@ -1,6 +1,5 @@
-import os
-import json
-from flask import Flask, request, abort, jsonify
+import os, json
+from flask import Flask, request, abort, jsonify, render_template, redirect, url_for
 from dotenv import load_dotenv
 
 # === 載入 .env 環境變數（可選）===
@@ -36,8 +35,6 @@ from linebot.v3.webhooks import (
 )
 from datetime import datetime, timedelta
 
-from flask import Flask, request, abort, jsonify, render_template, redirect, url_for
-
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
 LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
 
@@ -68,7 +65,7 @@ def handle_message(event):
     now = datetime.utcnow() + timedelta(hours=8)
 
     # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
-    doc_id = now.strftime("%d-%H:%M:%S") #"%Y%m%d%H%M%S%f"
+    doc_id = now.strftime("%d%H%M%S") #"%Y%m%d%H%M%S%f"
     # e.g. "20250513234530123456"
     
     # 1) 先在 chat_log 底下建立或更新這個 user_id 的文件
@@ -85,7 +82,7 @@ def handle_message(event):
       .collection("messages")\
       .document(doc_id)\
       .set({
-            "user_id": user_id,
+            #"user_id": user_id,
             "user_text": user_text,
             "bot_reply": bot_reply,
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
@@ -133,35 +130,45 @@ def firebase_home():
     return render_template('firebase_home.html', collections=names)
 
 # ===== Web 瀏覽：列 Document ID，並連結至子 Collection messages =====
+@app.route('/data/<collection>')
+def get_collection_data(collection):
+    if not collection.isidentifier():
+        abort(400)
+    docs = db.collection(collection).stream()
+    return jsonify([{'id': d.id, **d.to_dict()} for d in docs])
+
+# ===== Web 瀏覽 & 刪除 =====
+@app.route('/firebase')
+def firebase_home():
+    names = [c.id for c in db.collections()]
+    return render_template('firebase_home.html', collections=names)
+
 @app.route('/firebase/view/<collection>')
 def view_collection(collection):
-    try:
-        docs = db.collection(collection).stream()
-        records = [{'id': d.id, 'fields': d.to_dict()} for d in docs]
-        return render_template('firebase_docs.html', collection=collection, records=records)
-    except Exception as e:
-        return f"讀取失敗：{e}",500
+    docs = db.collection(collection).stream()
+    records = [{'id': d.id} for d in docs]
+    return render_template('firebase_docs.html',
+                           collection=collection,
+                           records=records)
 
-# ===== Web 瀏覽：列 messages 子集合 =====
 @app.route('/firebase/view/<collection>/<doc_id>')
 def view_messages(collection, doc_id):
-    try:
-        docs = db.collection(collection).document(doc_id).collection('messages').stream()
-        records = [{'id': d.id, **d.to_dict()} for d in docs]
-        return render_template('firebase_messages.html', collection=collection, doc_id=doc_id, messages=records)
-    except Exception as e:
-        return f"讀取失敗：{e}",500
+    msgs = db.collection(collection).document(doc_id) \
+             .collection('messages').stream()
+    records = [{'id': m.id, **m.to_dict()} for m in msgs]
+    return render_template('firebase_messages.html',
+                           collection=collection,
+                           doc_id=doc_id,
+                           messages=records)
 
-# ===== Web 刪除：支持刪除 messages 子集合中的單筆 =====
-@app.route('/firebase/delete/<collection>/<doc_id>/<subcol>/<subdoc>')
-def delete_subdoc(collection, doc_id, subcol, subdoc):
-    try:
-        db.collection(collection).document(doc_id).collection(subcol).document(subdoc).delete()
-        return redirect(url_for('view_messages', collection=collection, doc_id=doc_id))
-    except Exception as e:
-        return f"刪除失敗：{e}",500
+@app.route('/firebase/delete/<collection>/<doc_id>/messages/<msg_id>')
+def delete_message(collection, doc_id, msg_id):
+    db.collection(collection).document(doc_id) \
+      .collection('messages').document(msg_id).delete()
+    return redirect(url_for('view_messages',
+                            collection=collection,
+                            doc_id=doc_id))
 
-    
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
