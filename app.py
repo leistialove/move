@@ -72,6 +72,7 @@ def handle_message(event):
             alt_text="請選擇時間範圍",
             contents={
                 "type": "bubble",
+                "size": "mega",
                 "body": {
                     "type": "box",
                     "layout": "vertical",
@@ -131,6 +132,7 @@ def handle_message(event):
             )
         )
         return
+
 
 ######################################################
     
