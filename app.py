@@ -36,6 +36,8 @@ from linebot.v3.webhooks import (
 )
 from datetime import datetime, timedelta
 
+from flask import Flask, request, abort, jsonify, render_template, redirect, url_for
+
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
 LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
 
@@ -115,6 +117,30 @@ def get_collection_data(collection_name):
 
     return jsonify(results)
 
+# ===== Web 界面：Firebase 瀏覽與刪除 =====
+@app.route('/firebase')
+def firebase_home():
+    cols = db.collections()
+    names = [c.id for c in cols]
+    return render_template('firebase_home.html', collections=names)
+
+@app.route('/firebase/view/<collection>')
+def view_collection(collection):
+    try:
+        docs = db.collection(collection).stream()
+        documents = [{ 'id': doc.id, **doc.to_dict() } for doc in docs]
+        return render_template('firebase_view.html', collection=collection, documents=documents)
+    except Exception as e:
+        return f"讀取失敗：{e}", 500
+
+@app.route('/firebase/delete/<collection>/<doc_id>')
+def delete_document(collection, doc_id):
+    try:
+        db.collection(collection).document(doc_id).delete()
+        return redirect(url_for('view_collection', collection=collection))
+    except Exception as e:
+        return f"刪除失敗：{e}", 500
+    
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
