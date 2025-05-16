@@ -68,9 +68,17 @@ def handle_message(event):
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
     if user_text == "分析報告":
+
+        # 取得 app.py 的資料夾路徑
+        base = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(base, "time_select.json")
+
         # 讀入 JSON 檔案
         with open("time_select.json", encoding="utf-8") as f:
             flex_json = json.load(f)
+        
+        # DEBUG：印出來確認
+        print("Loaded Flex JSON:", json.dumps(flex_json, ensure_ascii=False, indent=2))
         
         # 建立 FlexMessage
         flex_msg = FlexMessage(
