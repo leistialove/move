@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>查看 {{ collection }} 資料</title>
+</head>
+<body>
+    <h2>Collection: {{ collection }}</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                {% if documents %}
+                    {% for key in documents[0].keys() %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                    <th>操作</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documents %}
+                <tr>
+                    {% for value in doc.values() %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                    <td><a href="{{ url_for('delete_document', collection=collection, doc_id=doc['id']) }}">刪除</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p><a href="{{ url_for('firebase_home') }}">← 回首頁</a></p>
+</body>
+</html>
