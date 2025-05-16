@@ -27,13 +27,8 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     ReplyMessageRequest,
-    TextMessage   
+    TextMessage
 )
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,
-    FlexSendMessage
-)
-
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
@@ -64,12 +59,6 @@ def callback():
 def handle_message(event):
     user_id   = event.source.user_id
     user_text = event.message.text
-
-
-    '''if user_text == "分析報告":
-        message = light_menu()
-        messaging_api.reply_message(event.reply_token, FlexSendMessage('分析報告', contents=message))'''
-
     bot_reply = f"你說：「{user_text}」"
 
     # 取得現在 UTC 時間
@@ -176,62 +165,6 @@ def delete_message(collection, doc_id, msg_id):
                             collection=collection,
                             doc_id=doc_id))
 
-def light_menu():
-    data={
-    "type": "bubble",
-    "body": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
-        {
-            "type": "text",
-            "weight": "bold",
-            "size": "xl",
-            "text": "選擇時間",
-            "align": "center"
-        }
-        ]
-    },
-    "footer": {
-        "type": "box",
-        "layout": "vertical",
-        "spacing": "sm",
-        "contents": [
-        {
-            "type": "button",
-            "style": "link",
-            "height": "sm",
-            "action": {
-            "type": "postback",
-            "label": "10分鐘",
-            "data": "report_10"
-            }
-        },
-        {
-            "type": "button",
-            "style": "link",
-            "height": "sm",
-            "action": {
-            "type": "postback",
-            "label": "30分鐘",
-            "data": "report_30"
-            }
-        },
-        {
-            "type": "button",
-            "style": "link",
-            "height": "sm",
-            "action": {
-            "type": "postback",
-            "label": "1小時",
-            "data": "report_10"
-            }
-        }
-        ],
-        "flex": 0
-    }
-    }
-    return data
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
