@@ -104,23 +104,12 @@ def list_collections():
     return jsonify(names)
 
 # ===== API：取得 chat_log 的前 100 筆資料（模擬 /data/<table_name>）=====
-@app.route('/data/<collection_name>', methods=['GET'])
-def get_collection_data(collection_name):
-    if not collection_name.isidentifier():
-        abort(400, 'Invalid collection name')
-
-    try:
-        docs = db.collection(collection_name).limit(100).stream()
-    except Exception:
-        abort(404, f"Collection `{collection_name}` not found")
-
-    results = []
-    for doc in docs:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        results.append(data)
-
-    return jsonify(results)
+@app.route('/data/<collection>', endpoint='get_collection_data_api')
+def get_collection_data_api(collection):
+    if not collection.isidentifier():
+        abort(400)
+    docs = db.collection(collection).stream()
+    return jsonify([{'id': d.id, **d.to_dict()} for d in docs])
 
 # ===== Web 界面：Firebase 瀏覽與刪除 =====
 @app.route('/firebase')
