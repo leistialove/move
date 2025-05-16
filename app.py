@@ -29,11 +29,15 @@ from linebot.v3.messaging import (
     MessagingApi,
     ReplyMessageRequest,
     TextMessage,
-    FlexMessage
+    FlexMessage,
+    TemplateSendMessage
 )
 
-from linebot.v3.messaging.models import FlexMessage
-
+from linebot.v3.messaging.models import (
+    FlexMessage,
+    ButtonsTemplate, 
+    PostbackAction
+)
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent,
@@ -68,26 +72,22 @@ def handle_message(event):
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
     if event.message.text == "分析報告":
-        # 最簡版 Flex JSON：只有 body/text
-        test_json = {
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                    { "type": "text", "text": "Hello Flex!" }
+        buttons = TemplateSendMessage(
+            alt_text="請選擇時間範圍",
+            template=ButtonsTemplate(
+                title="分析報告",
+                text="請選擇要查看的時間範圍",
+                actions=[
+                    PostbackAction(label="10 分鐘", data="report_10"),
+                    PostbackAction(label="30 分鐘", data="report_30"),
+                    PostbackAction(label="1 小時", data="report_60")
                 ]
-            }
-        }
-
-        flex_msg = FlexMessage(
-            alt_text="test",
-            contents=test_json
+            )
         )
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[flex_msg]
+                messages=[buttons]
             )
         )
         return
