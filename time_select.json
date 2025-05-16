@@ -1,10 +1,51 @@
+// time_select.json（放在跟 app.py 同一層）
 {
   "type": "bubble",
   "body": {
     "type": "box",
     "layout": "vertical",
     "contents": [
-      { "type": "text", "text": "Hello Flex!" }
+      {
+        "type": "text",
+        "text": "請選擇時間",
+        "weight": "bold",
+        "size": "xl",
+        "align": "center"
+      }
+    ]
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "spacing": "sm",
+    "contents": [
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "postback",
+          "label": "10 分鐘",
+          "data": "report_10"
+        }
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "postback",
+          "label": "30 分鐘",
+          "data": "report_30"
+        }
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "postback",
+          "label": "1 小時",
+          "data": "report_60"
+        }
+      }
     ]
   }
 }
