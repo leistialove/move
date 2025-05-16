@@ -1,4 +1,3 @@
-// time_select.json（放在跟 app.py 同一層）
 {
   "type": "bubble",
   "body": {
