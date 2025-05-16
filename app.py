@@ -137,11 +137,14 @@ def view_messages(collection, doc_id):
 
 @app.route('/firebase/delete/<collection>/<doc_id>/messages/<msg_id>')
 def delete_message(collection, doc_id, msg_id):
-    db.collection(collection).document(doc_id)\
-      .collection('messages').document(msg_id).delete()
-    return redirect(
-        url_for('view_messages', collection=collection, doc_id=doc_id)
-    )
+    db.collection(collection)\
+      .document(doc_id)\
+      .collection('messages')\
+      .document(msg_id)\
+      .delete()
+    return redirect(url_for('view_messages',
+                            collection=collection,
+                            doc_id=doc_id))
 
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
