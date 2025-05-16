@@ -93,38 +93,36 @@ def handle_message(event):
                     "contents": [
                         {
                             "type": "button",
-                            "style": "link",
-                            "height": "sm",
                             "action": {
                                 "type": "postback",
                                 "label": "10 分鐘",
                                 "data": "report_10"
-                            }
+                            },
+                            "style": "primary"
                         },
                         {
                             "type": "button",
-                            "style": "link",
-                            "height": "sm",
                             "action": {
                                 "type": "postback",
                                 "label": "30 分鐘",
                                 "data": "report_30"
-                            }
+                            },
+                            "style": "primary"
                         },
                         {
                             "type": "button",
-                            "style": "link",
-                            "height": "sm",
                             "action": {
                                 "type": "postback",
                                 "label": "1 小時",
                                 "data": "report_60"
-                            }
+                            },
+                            "style": "primary"
                         }
                     ]
                 }
             }
         )
+
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
@@ -132,6 +130,7 @@ def handle_message(event):
             )
         )
         return
+
 
 
 ######################################################
