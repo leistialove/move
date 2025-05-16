@@ -69,19 +69,19 @@ def handle_message(event):
     user_text = event.message.text
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
-    if user_text == "分析報告":
-        # 原生 dict 方式建立 Buttons Template
+    if event.message.text == "分析報告":
+        # 用 JSON 規範的鍵名：altText、template
         template_message = {
             "type": "template",
-            "alt_text": "請選擇時間範圍",
+            "altText": "請選擇時間範圍",       # ⚠️ 必須是 altText
             "template": {
                 "type": "buttons",
                 "title": "分析報告",
                 "text": "請選擇要查看的時間範圍",
                 "actions": [
-                    {"type":"postback", "label":"10 分鐘", "data":"report_10"},
-                    {"type":"postback", "label":"30 分鐘", "data":"report_30"},
-                    {"type":"postback", "label":"1 小時", "data":"report_60"}
+                    { "type": "postback", "label": "10 分鐘", "data": "report_10" },
+                    { "type": "postback", "label": "30 分鐘", "data": "report_30" },
+                    { "type": "postback", "label": "1 小時", "data": "report_60" }
                 ]
             }
         }
@@ -92,9 +92,7 @@ def handle_message(event):
                 messages=[ template_message ]
             )
         )
-
         return
-
 
 
 
