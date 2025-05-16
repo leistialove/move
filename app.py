@@ -66,9 +66,9 @@ def handle_message(event):
     user_text = event.message.text
 
 
-    if user_text == "分析報告":
+    '''if user_text == "分析報告":
         message = light_menu()
-        messaging_api.reply_message(event.reply_token, FlexSendMessage('分析報告', contents=message))
+        messaging_api.reply_message(event.reply_token, FlexSendMessage('分析報告', contents=message))'''
 
     bot_reply = f"你說：「{user_text}」"
 
