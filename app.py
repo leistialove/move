@@ -124,22 +124,35 @@ def firebase_home():
     names = [c.id for c in cols]
     return render_template('firebase_home.html', collections=names)
 
+# ===== Web 瀏覽：列 Document ID，並連結至子 Collection messages =====
 @app.route('/firebase/view/<collection>')
 def view_collection(collection):
     try:
         docs = db.collection(collection).stream()
-        documents = [{ 'id': doc.id, **doc.to_dict() } for doc in docs]
-        return render_template('firebase_view.html', collection=collection, documents=documents)
+        records = [{'id': d.id, 'fields': d.to_dict()} for d in docs]
+        return render_template('firebase_docs.html', collection=collection, records=records)
     except Exception as e:
-        return f"讀取失敗：{e}", 500
+        return f"讀取失敗：{e}",500
 
-@app.route('/firebase/delete/<collection>/<doc_id>')
-def delete_document(collection, doc_id):
+# ===== Web 瀏覽：列 messages 子集合 =====
+@app.route('/firebase/view/<collection>/<doc_id>')
+def view_messages(collection, doc_id):
     try:
-        db.collection(collection).document(doc_id).delete()
-        return redirect(url_for('view_collection', collection=collection))
+        docs = db.collection(collection).document(doc_id).collection('messages').stream()
+        records = [{'id': d.id, **d.to_dict()} for d in docs]
+        return render_template('firebase_messages.html', collection=collection, doc_id=doc_id, messages=records)
     except Exception as e:
-        return f"刪除失敗：{e}", 500
+        return f"讀取失敗：{e}",500
+
+# ===== Web 刪除：支持刪除 messages 子集合中的單筆 =====
+@app.route('/firebase/delete/<collection>/<doc_id>/<subcol>/<subdoc>')
+def delete_subdoc(collection, doc_id, subcol, subdoc):
+    try:
+        db.collection(collection).document(doc_id).collection(subcol).document(subdoc).delete()
+        return redirect(url_for('view_messages', collection=collection, doc_id=doc_id))
+    except Exception as e:
+        return f"刪除失敗：{e}",500
+
     
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
