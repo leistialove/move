@@ -68,61 +68,16 @@ def handle_message(event):
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
     if user_text == "分析報告":
+        # 讀入 JSON 檔案
+        with open("time_select.json", encoding="utf-8") as f:
+            flex_json = json.load(f)
+        
+        # 建立 FlexMessage
         flex_msg = FlexMessage(
-            alt_text="請選擇時間範圍",
-            contents={
-                "type": "bubble",
-                "size": "mega",
-                "body": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "請選擇時間",
-                            "weight": "bold",
-                            "size": "xl",
-                            "align": "center"
-                        }
-                    ]
-                },
-                "footer": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "spacing": "sm",
-                    "contents": [
-                        {
-                            "type": "button",
-                            "action": {
-                                "type": "postback",
-                                "label": "10 分鐘",
-                                "data": "report_10"
-                            },
-                            "style": "primary"
-                        },
-                        {
-                            "type": "button",
-                            "action": {
-                                "type": "postback",
-                                "label": "30 分鐘",
-                                "data": "report_30"
-                            },
-                            "style": "primary"
-                        },
-                        {
-                            "type": "button",
-                            "action": {
-                                "type": "postback",
-                                "label": "1 小時",
-                                "data": "report_60"
-                            },
-                            "style": "primary"
-                        }
-                    ]
-                }
-            }
+            alt_text="請選擇時間",
+            contents=flex_json
         )
-
+        
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
