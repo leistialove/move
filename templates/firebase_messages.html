@@ -12,7 +12,11 @@
       <tr>
         {% for v in msg.values() %}<td>{{ v }}</td>{% endfor %}
         <td>
-          <a href="{{ url_for('delete_subdoc', collection=collection, doc_id=doc_id, subcol='messages', subdoc=msg['id']) }}">刪除</a>
+          <a href="{{ url_for('delete_message',
+                    collection=collection,
+                    doc_id=doc_id,
+                    msg_id=msg['id']) }}">刪除</a>
+
         </td>
       </tr>
     {% endfor %}
