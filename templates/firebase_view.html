@@ -1,32 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>查看 {{ collection }} 資料</title>
+  <meta charset="UTF-8">
+  <title>Documents in {{ collection }}</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    a { color: #007bff; }
+  </style>
 </head>
 <body>
-    <h2>Collection: {{ collection }}</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                {% if documents %}
-                    {% for key in documents[0].keys() %}
-                        <th>{{ key }}</th>
-                    {% endfor %}
-                    <th>操作</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for doc in documents %}
-                <tr>
-                    {% for value in doc.values() %}
-                        <td>{{ value }}</td>
-                    {% endfor %}
-                    <td><a href="{{ url_for('delete_document', collection=collection, doc_id=doc['id']) }}">刪除</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <p><a href="{{ url_for('firebase_home') }}">← 回首頁</a></p>
+  <h2>Collection: {{ collection }}</h2>
+  <table>
+    <thead>
+      <tr><th>Document ID</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+      {% for rec in records %}
+        <tr>
+          <td>{{ rec.id }}</td>
+          <td>
+            <a href="{{ url_for('view_messages', collection=collection, doc_id=rec.id) }}">查看 messages</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="{{ url_for('firebase_home') }}">← 回首頁</a></p>
+</body>
+</html>
+
+<!-- templates/firebase_messages.html -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>Messages in {{ collection }}/{{ doc_id }}</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    a { color: #d9534f; }
+  </style>
+</head>
+<body>
+  <h2>Collection: {{ collection }} / Document: {{ doc_id }}</h2>
+  <table>
+    <thead>
+      <tr>
+        {% if messages %}
+          {% for key in messages[0].keys() %}
+            <th>{{ key }}</th>
+          {% endfor %}
+          <th>刪除</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in messages %}
+        <tr>
+          {% for value in msg.values() %}
+            <td>{{ value }}</td>
+          {% endfor %}
+          <td>
+            <a href="{{ url_for('delete_subdoc', collection=collection, doc_id=doc_id, subcol='messages', subdoc=msg['id']) }}">刪除</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="{{ url_for('view_collection', collection=collection) }}">← 回到 Document 列表</a></p>
 </body>
 </html>
