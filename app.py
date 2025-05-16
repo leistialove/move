@@ -73,15 +73,15 @@ def handle_message(event):
         # 原生 dict 方式建立 Buttons Template
         template_message = {
             "type": "template",
-            "altText": "請選擇時間範圍",
+            "alt_text": "請選擇時間範圍",
             "template": {
                 "type": "buttons",
                 "title": "分析報告",
                 "text": "請選擇要查看的時間範圍",
                 "actions": [
-                    { "type": "postback", "label": "10 分鐘", "data": "report_10" },
-                    { "type": "postback", "label": "30 分鐘", "data": "report_30" },
-                    { "type": "postback", "label": "1 小時", "data": "report_60" }
+                    {"type":"postback", "label":"10 分鐘", "data":"report_10"},
+                    {"type":"postback", "label":"30 分鐘", "data":"report_30"},
+                    {"type":"postback", "label":"1 小時", "data":"report_60"}
                 ]
             }
         }
@@ -92,6 +92,7 @@ def handle_message(event):
                 messages=[ template_message ]
             )
         )
+
         return
 
 
