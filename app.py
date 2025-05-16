@@ -28,11 +28,16 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     ReplyMessageRequest,
-    TextMessage
+    TextMessage,
+    FlexMessage
+)
+from linebot.v3.messaging.models import (
+    Bubble, Box, Text, Button, PostbackAction
 )
 from linebot.v3.webhooks import (
     MessageEvent,
-    TextMessageContent
+    TextMessageContent,
+    PostbackEvent
 )
 from datetime import datetime, timedelta
 
@@ -60,12 +65,50 @@ def callback():
 def handle_message(event):
     user_id   = event.source.user_id
     user_text = event.message.text
+    
+    # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
+    if user_text == "分析報告":
+        flex_msg = FlexMessage(
+            alt_text="請選擇時間範圍",
+            contents=Bubble(
+                body=Box(
+                    layout="vertical",
+                    contents=[
+                        Text(text="請選擇時間", weight="bold", size="xl", align="center")
+                    ]
+                ),
+                footer=Box(
+                    layout="vertical",
+                    spacing="sm",
+                    contents=[
+                        Button(
+                            style="link", height="sm",
+                            action=PostbackAction(label="10 分鐘", data="report_10")
+                        ),
+                        Button(
+                            style="link", height="sm",
+                            action=PostbackAction(label="30 分鐘", data="report_30")
+                        ),
+                        Button(
+                            style="link", height="sm",
+                            action=PostbackAction(label="1 小時", data="report_60")
+                        )
+                    ]
+                )
+            )
+        )
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[flex_msg]
+            )
+        )
+        return
+######################################################
+    
     bot_reply = f"你說：「{user_text}」"
-
     # 取得現在 UTC 時間
     now = datetime.utcnow() + timedelta(hours=8)
-
-    # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
     doc_id = now.strftime("%d-%H:%M:%S") #"%Y%m%d%H%M%S%f"
     # e.g. "20250513234530123456"
 
@@ -88,6 +131,22 @@ def handle_message(event):
             messages=[ TextMessage(text=bot_reply) ]
         )
     )
+
+# ===== 處理 Postback（時間選擇回應） =====
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    data = event.postback.data
+    if data.startswith("report_"):
+        minute = data.split("_")[1]
+        msg = f"📊 為您產生最近 {minute} 分鐘的分析報告"
+
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=msg)]
+            )
+        )
+######################################################################
 
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
