@@ -10,13 +10,13 @@ load_dotenv()
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# 從環境變數載入 Firebase 金鑰 JSON
+'''# 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
 key_dict = json.loads(firebase_json)
 cred = credentials.Certificate(key_dict)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-
+'''
 # ===== Flask App =====
 app = Flask(__name__)
 
@@ -67,23 +67,22 @@ def handle_message(event):
     user_text = event.message.text
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
-    if event.message.text == "分析報告":
+    if user_text == "分析報告":
+        # 1. 讀入 JSON
         base = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(base, "time_select.json"), encoding="utf-8") as f:
             flex_json = json.load(f)
-        # 印一次看看
-        print(json.dumps(flex_json, ensure_ascii=False, indent=2))
-        
-        # 建立 FlexMessage
-        flex_msg = FlexMessage(
-            alt_text="請選擇時間",
-            contents=flex_json
-        )
-        
+
+        # 2. 把它 dump 出來當文字先回給你看
+        loaded_str = json.dumps(flex_json, ensure_ascii=False)
+        # 注意：若太長，可以只取前 1000 字
+        loaded_str = loaded_str[:1000] + ("..." if len(loaded_str)>1000 else "")
+
+        # 回傳讀到的 JSON 結構（文字）
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[flex_msg]
+                messages=[ TextMessage(text=f"Loaded Flex JSON:\n{loaded_str}") ]
             )
         )
         return
