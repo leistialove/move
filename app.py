@@ -31,9 +31,9 @@ from linebot.v3.messaging import (
     TextMessage,
     FlexMessage
 )
-from linebot.v3.messaging.models import (
-    Bubble, Box, Text, Button, PostbackAction
-)
+
+from linebot.v3.messaging.models import FlexMessage
+
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent,
@@ -70,32 +70,59 @@ def handle_message(event):
     if user_text == "分析報告":
         flex_msg = FlexMessage(
             alt_text="請選擇時間範圍",
-            contents=Bubble(
-                body=Box(
-                    layout="vertical",
-                    contents=[
-                        Text(text="請選擇時間", weight="bold", size="xl", align="center")
+            contents={
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "請選擇時間",
+                            "weight": "bold",
+                            "size": "xl",
+                            "align": "center"
+                        }
                     ]
-                ),
-                footer=Box(
-                    layout="vertical",
-                    spacing="sm",
-                    contents=[
-                        Button(
-                            style="link", height="sm",
-                            action=PostbackAction(label="10 分鐘", data="report_10")
-                        ),
-                        Button(
-                            style="link", height="sm",
-                            action=PostbackAction(label="30 分鐘", data="report_30")
-                        ),
-                        Button(
-                            style="link", height="sm",
-                            action=PostbackAction(label="1 小時", data="report_60")
-                        )
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "link",
+                            "height": "sm",
+                            "action": {
+                                "type": "postback",
+                                "label": "10 分鐘",
+                                "data": "report_10"
+                            }
+                        },
+                        {
+                            "type": "button",
+                            "style": "link",
+                            "height": "sm",
+                            "action": {
+                                "type": "postback",
+                                "label": "30 分鐘",
+                                "data": "report_30"
+                            }
+                        },
+                        {
+                            "type": "button",
+                            "style": "link",
+                            "height": "sm",
+                            "action": {
+                                "type": "postback",
+                                "label": "1 小時",
+                                "data": "report_60"
+                            }
+                        }
                     ]
-                )
-            )
+                }
+            }
         )
         messaging_api.reply_message(
             ReplyMessageRequest(
@@ -104,6 +131,7 @@ def handle_message(event):
             )
         )
         return
+
 ######################################################
     
     bot_reply = f"你說：「{user_text}」"
