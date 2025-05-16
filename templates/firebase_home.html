@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Collections</title>
+</head>
+<body>
+    <h2>可用的 Firebase Collections：</h2>
+    <ul>
+        {% for col in collections %}
+            <li><a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
