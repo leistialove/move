@@ -104,29 +104,14 @@ def list_collections():
     return jsonify(names)
 
 # ===== API：取得 chat_log 的前 100 筆資料（模擬 /data/<table_name>）=====
-@app.route('/data/<collection>', endpoint='get_collection_data_api')
+@app.route('/data/<collection>')
 def get_collection_data_api(collection):
     if not collection.isidentifier():
         abort(400)
     docs = db.collection(collection).stream()
     return jsonify([{'id': d.id, **d.to_dict()} for d in docs])
 
-# ===== Web 界面：Firebase 瀏覽與刪除 =====
-@app.route('/firebase')
-def firebase_home():
-    cols = db.collections()
-    names = [c.id for c in cols]
-    return render_template('firebase_home.html', collections=names)
-
-# ===== Web 瀏覽：列 Document ID，並連結至子 Collection messages =====
-@app.route('/data/<collection>')
-def get_collection_data(collection):
-    if not collection.isidentifier():
-        abort(400)
-    docs = db.collection(collection).stream()
-    return jsonify([{'id': d.id, **d.to_dict()} for d in docs])
-
-# ===== Web 瀏覽 & 刪除 =====
+# ===== Web UI：Firebase 瀏覽與刪除 =====
 @app.route('/firebase')
 def firebase_home():
     names = [c.id for c in db.collections()]
@@ -136,27 +121,27 @@ def firebase_home():
 def view_collection(collection):
     docs = db.collection(collection).stream()
     records = [{'id': d.id} for d in docs]
-    return render_template('firebase_docs.html',
-                           collection=collection,
-                           records=records)
+    return render_template('firebase_docs.html', collection=collection, records=records)
 
 @app.route('/firebase/view/<collection>/<doc_id>')
 def view_messages(collection, doc_id):
-    msgs = db.collection(collection).document(doc_id) \
+    msgs = db.collection(collection).document(doc_id)\
              .collection('messages').stream()
     records = [{'id': m.id, **m.to_dict()} for m in msgs]
-    return render_template('firebase_messages.html',
-                           collection=collection,
-                           doc_id=doc_id,
-                           messages=records)
+    return render_template(
+        'firebase_messages.html',
+        collection=collection,
+        doc_id=doc_id,
+        messages=records
+    )
 
 @app.route('/firebase/delete/<collection>/<doc_id>/messages/<msg_id>')
 def delete_message(collection, doc_id, msg_id):
-    db.collection(collection).document(doc_id) \
+    db.collection(collection).document(doc_id)\
       .collection('messages').document(msg_id).delete()
-    return redirect(url_for('view_messages',
-                            collection=collection,
-                            doc_id=doc_id))
+    return redirect(
+        url_for('view_messages', collection=collection, doc_id=doc_id)
+    )
 
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
