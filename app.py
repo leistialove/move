@@ -29,14 +29,12 @@ from linebot.v3.messaging import (
     MessagingApi,
     ReplyMessageRequest,
     TextMessage,
-    FlexMessage,
-    TemplateSendMessage
+    FlexMessage
+
 )
 
 from linebot.v3.messaging.models import (
-    FlexMessage,
-    ButtonsTemplate, 
-    PostbackAction
+    FlexMessage
 )
 from linebot.v3.webhooks import (
     MessageEvent,
@@ -71,26 +69,31 @@ def handle_message(event):
     user_text = event.message.text
     
     # ✅ 若為「分析報告」，回傳時間 Flex 選單##############################
-    if event.message.text == "分析報告":
-        buttons = TemplateSendMessage(
-            alt_text="請選擇時間範圍",
-            template=ButtonsTemplate(
-                title="分析報告",
-                text="請選擇要查看的時間範圍",
-                actions=[
-                    PostbackAction(label="10 分鐘", data="report_10"),
-                    PostbackAction(label="30 分鐘", data="report_30"),
-                    PostbackAction(label="1 小時", data="report_60")
+    if user_text == "分析報告":
+        # 原生 dict 方式建立 Buttons Template
+        template_message = {
+            "type": "template",
+            "altText": "請選擇時間範圍",
+            "template": {
+                "type": "buttons",
+                "title": "分析報告",
+                "text": "請選擇要查看的時間範圍",
+                "actions": [
+                    { "type": "postback", "label": "10 分鐘", "data": "report_10" },
+                    { "type": "postback", "label": "30 分鐘", "data": "report_30" },
+                    { "type": "postback", "label": "1 小時", "data": "report_60" }
                 ]
-            )
-        )
+            }
+        }
+
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[buttons]
+                messages=[ template_message ]
             )
         )
         return
+
 
 
 
