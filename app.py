@@ -31,10 +31,7 @@ from linebot.v3.messaging import (
     FlexMessage,
     FlexContainer   
 )
-#from linebot.models import (
-#    MessageEvent
-#)#
-
+from linebot.models import PostbackEvent, TextSendMessage
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
@@ -46,7 +43,7 @@ LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Sec
 
 config        = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 api_client    = ApiClient(config)
-messaging_api = MessagingApi(api_client)
+line_bot_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 
 # ===== LINE Webhook 接收 =====
@@ -116,7 +113,7 @@ def handle_message(event):
         "action": {
           "type": "postback",
           "label": "1小時",
-          "data": "report_10"
+          "data": "report_60"
         }
       }
     ],
@@ -124,7 +121,7 @@ def handle_message(event):
   }
 }
         line_flex_str=json.dumps(line_flex_json)
-        messaging_api.reply_message(
+        line_bot_api.reply_message(
           ReplyMessageRequest(
             reply_token=event.reply_token,
             messages=[FlexMessage(altText="分析報告-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
@@ -132,7 +129,7 @@ def handle_message(event):
         )
     else:
         bot_reply = f"你說：「{user_text}」"
-        messaging_api.reply_message(
+        line_bot_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[ TextMessage(text=bot_reply) ]
@@ -163,6 +160,26 @@ def handle_message(event):
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    postback_data = event.postback.data
+    user_id = event.source.user_id
+    
+    if postback_data == "report_10":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="你選擇了 10 分鐘報告")
+        )
+    elif postback_data == "report_30":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="你選擇了 30 分鐘報告")
+        )
+    elif postback_data == "report_60":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="你選擇了 1 小時報告")
+        )
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
 def list_collections():
