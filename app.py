@@ -31,10 +31,9 @@ from linebot.v3.messaging import (
     FlexMessage,
     FlexContainer   
 )
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,
-    FlexSendMessage
-)
+#from linebot.models import (
+#    MessageEvent
+#)#
 
 from linebot.v3.webhooks import (
     MessageEvent,
@@ -66,6 +65,8 @@ def callback():
 def handle_message(event):
     user_id   = event.source.user_id
     user_text = event.message.text
+
+    # 回覆 LINE 使用者
     if user_text == "分析報告":
         line_flex_json={
           "type": "bubble",
@@ -126,19 +127,20 @@ def handle_message(event):
           ReplyMessageRequest(
             reply_token=event.reply_token,
             messages=[FlexMessage(altText="123",contents=FlexContainer.from_json(line_flex_str))]
+          )
         )
-    )
-        '''message = light_menu()
-        messaging_api.reply_message(event.reply_token, FlexSendMessage('分析報告', contents=message))'''
+    else:
+        bot_reply = f"你說：「{user_text}」"
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[ TextMessage(text=bot_reply) ]
+            )
+        )    
+    
 
-    bot_reply = f"你說：「{user_text}」"
-
-    # 取得現在 UTC 時間
-    now = datetime.utcnow() + timedelta(hours=8)
-
-    # 1) 如果想要「年月日時分秒微秒」的格式，保證唯一又可讀：
-    doc_id = now.strftime("%d%H%M%S") #"%Y%m%d%H%M%S%f"
-    # e.g. "20250513234530123456"
+    now = datetime.utcnow() + timedelta(hours=8) # 取得現在 UTC 時間
+    doc_id = now.strftime("%d%H%M%S") #時間格式 "%Y%m%d%H%M%S%f"
     
     # 1) 先在 chat_log 底下建立或更新這個 user_id 的文件
     db.collection("chat_log") \
@@ -160,14 +162,6 @@ def handle_message(event):
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
-    # 回覆 LINE 使用者
-    messaging_api.reply_message(
-        ReplyMessageRequest(
-            reply_token=event.reply_token,
-            messages=[ TextMessage(text=bot_reply) ]
-        )
-    )
-
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
 def list_collections():
@@ -237,63 +231,6 @@ def delete_message(collection, doc_id, msg_id):
                             collection=collection,
                             doc_id=doc_id))
 
-'''def light_menu():
-    
-    data={
-  "type": "bubble",
-  "body": {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
-      {
-        "type": "text",
-        "weight": "bold",
-        "size": "xl",
-        "text": "選擇時間",
-        "align": "center"
-      }
-    ]
-  },
-  "footer": {
-    "type": "box",
-    "layout": "vertical",
-    "spacing": "sm",
-    "contents": [
-      {
-        "type": "button",
-        "style": "link",
-        "height": "sm",
-        "action": {
-          "type": "postback",
-          "label": "10分鐘",
-          "data": "report_10"
-        }
-      },
-      {
-        "type": "button",
-        "style": "link",
-        "height": "sm",
-        "action": {
-          "type": "postback",
-          "label": "30分鐘",
-          "data": "report_30"
-        }
-      },
-      {
-        "type": "button",
-        "style": "link",
-        "height": "sm",
-        "action": {
-          "type": "postback",
-          "label": "1小時",
-          "data": "report_10"
-        }
-      }
-    ],
-    "flex": 0
-  }
-}
-    return data'''
 # ===== 啟動應用程式 =====
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
