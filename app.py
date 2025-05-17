@@ -158,7 +158,7 @@ def handle_message(event):
       .set({
             #"user_id": user_id,
             "user_text": user_text,
-            "bot_reply": bot_reply,
+            #"bot_reply": bot_reply,
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
