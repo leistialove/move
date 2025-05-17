@@ -68,6 +68,7 @@ def handle_message(event):
 
     # 回覆 LINE 使用者
     if user_text == "分析報告":
+        bot_reply = user_text
         line_flex_json={
           "type": "bubble",
   "body": {
@@ -126,7 +127,7 @@ def handle_message(event):
         messaging_api.reply_message(
           ReplyMessageRequest(
             reply_token=event.reply_token,
-            messages=[FlexMessage(altText="123",contents=FlexContainer.from_json(line_flex_str))]
+            messages=[FlexMessage(altText="分析報告-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
           )
         )
     else:
@@ -158,7 +159,7 @@ def handle_message(event):
       .set({
             #"user_id": user_id,
             "user_text": user_text,
-            #"bot_reply": bot_reply,
+            "bot_reply": bot_reply,
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
