@@ -7,7 +7,7 @@ load_dotenv()
 
 # ===== Firebase Firestore 設定 =====
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, storage
 
 # 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
@@ -172,11 +172,8 @@ def handle_postback(event):
 
     if postback_data in duration_map:
         minutes = duration_map[postback_data]
-        records = get_recent_records(minutes)
-        summary = summarize_posture(records)
-        image_path = generate_summary_chart(summary, minutes)
+        image_url = generate_posture_chart(minutes)
 
-        image_url = f"https://move-kvr8.onrender.com/static/reports/report_{minutes}.png"
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
@@ -188,6 +185,7 @@ def handle_postback(event):
                 ]
             )
         )
+
     '''
     if postback_data == "report_10":
         messaging_api.reply_message(
@@ -211,23 +209,17 @@ def handle_postback(event):
             )
         )
 '''
-def get_recent_records(duration_min):
+def get_recent_records(minutes):
     db = firestore.client()
     now = datetime.now()
-    
-    # 格式：timestamp 格式為 "0519_00:09"，我們只抓最近 N 分鐘的紀錄
-    target_time = now - timedelta(minutes=duration_min)
-    target_key = target_time.strftime("%m%d_%H:%M")
+    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
 
-    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(duration_min).stream()
-    
     records = []
     for doc in docs:
-        data = doc.to_dict()
-        records.append(data)
+        records.append(doc.to_dict())
     return records
 
-def summarize_posture(records):
+def summarize_records(records):
     total_standing = 0
     total_sitting = 0
     total_movement = 0
@@ -244,21 +236,34 @@ def summarize_posture(records):
     }
 
 import matplotlib.pyplot as plt
-def generate_summary_chart(summary: dict, duration: int):
+def generate_chart_image(summary, minutes):
     labels = ["站立", "坐下"]
-    times = [summary["站立秒數"], summary["坐下秒數"]]
+    values = [summary["站立秒數"], summary["坐下秒數"]]
 
     plt.figure(figsize=(6, 6))
-    plt.pie(times, labels=labels, autopct="%1.1f%%", startangle=90)
-    plt.title(f"{duration} 分鐘內站坐分布")
-
-    # 顯示移動量
-    plt.figtext(0.5, 0.01, f"移動量：{summary['移動量']:.2f}", ha='center')
-
-    save_path = f"static/reports/report_{duration}.png"
+    plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+    plt.title(f"{minutes} 分鐘內站坐分佈")
+    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center")
+    
+    save_path = f"/tmp/report_{minutes}.png"
     plt.savefig(save_path)
     plt.close()
     return save_path
+
+def upload_to_firebase(local_path, remote_filename):
+    bucket = storage.bucket()
+    blob = bucket.blob(f"charts/{remote_filename}")
+    blob.upload_from_filename(local_path)
+    blob.make_public()  # ⚠️ 如果需要私有分享，可以改為產生簽名 URL
+    return blob.public_url
+
+def generate_posture_chart(minutes=10):
+    records = get_recent_records(minutes)
+    summary = summarize_records(records)
+    image_path = generate_chart_image(summary, minutes)
+    remote_name = os.path.basename(image_path)
+    image_url = upload_to_firebase(image_path, remote_name)
+    return image_url
 
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
