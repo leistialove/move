@@ -9,9 +9,6 @@ load_dotenv()
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-from yolo_camera import gen_frames
-from flask import Response
-
 # 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
 key_dict = json.loads(firebase_json)
@@ -49,14 +46,20 @@ api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 
-@app.route('/stream')
-def stream_page():
-    return render_template("stream.html")
+# === 新增變數儲存最新圖片 ===
+latest_image = None
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+# === 接收本機 YOLO 傳來的 base64 畫面 ===
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    global latest_image
+    data = request.json
+    latest_image = data.get("image")  # base64 編碼字串
+    return "OK"
+
+@app.route('/stream')
+def stream_view():
+    return render_template('stream.html', image_data=latest_image)
 
 # ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
