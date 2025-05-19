@@ -7,7 +7,10 @@ load_dotenv()
 
 # ===== Firebase Firestore 設定 =====
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore
+
+from yolo_camera import gen_frames
+from flask import Response
 
 # 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
@@ -29,8 +32,7 @@ from linebot.v3.messaging import (
     ReplyMessageRequest,
     TextMessage,
     FlexMessage,
-    FlexContainer,
-    ImageMessage   
+    FlexContainer   
 )
 from linebot.models import PostbackEvent
 from linebot.v3.webhooks import (
@@ -46,6 +48,15 @@ config        = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
+
+@app.route('/stream')
+def stream_page():
+    return render_template("stream.html")
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
@@ -164,29 +175,6 @@ def handle_postback(event):
     postback_data = event.postback.data
     user_id = event.source.user_id
     
-    duration_map = {
-        "report_10": 10,
-        "report_30": 30,
-        "report_60": 60
-    }
-
-    if postback_data in duration_map:
-        minutes = duration_map[postback_data]
-        image_url = generate_posture_chart(minutes)
-
-        messaging_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[
-                    ImageMessage(
-                        original_content_url=image_url,
-                        preview_image_url=image_url
-                    )
-                ]
-            )
-        )
-
-    '''
     if postback_data == "report_10":
         messaging_api.reply_message(
             ReplyMessageRequest(
@@ -208,63 +196,6 @@ def handle_postback(event):
                 messages=[TextMessage(text="你選擇了 60 分鐘報告")]
             )
         )
-'''
-def get_recent_records(minutes):
-    db = firestore.client()
-    now = datetime.now()
-    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
-
-    records = []
-    for doc in docs:
-        records.append(doc.to_dict())
-    return records
-
-def summarize_records(records):
-    total_standing = 0
-    total_sitting = 0
-    total_movement = 0
-
-    for r in records:
-        total_standing += r.get("standing_frames", 0)
-        total_sitting += r.get("sitting_frames", 0)
-        total_movement += r.get("total_movement", 0)
-
-    return {
-        "站立秒數": total_standing,
-        "坐下秒數": total_sitting,
-        "移動量": total_movement
-    }
-
-import matplotlib.pyplot as plt
-def generate_chart_image(summary, minutes):
-    labels = ["站立", "坐下"]
-    values = [summary["站立秒數"], summary["坐下秒數"]]
-
-    plt.figure(figsize=(6, 6))
-    plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-    plt.title(f"{minutes} 分鐘內站坐分佈")
-    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center")
-    
-    save_path = f"/tmp/report_{minutes}.png"
-    plt.savefig(save_path)
-    plt.close()
-    return save_path
-
-def upload_to_firebase(local_path, remote_filename):
-    bucket = storage.bucket()
-    blob = bucket.blob(f"charts/{remote_filename}")
-    blob.upload_from_filename(local_path)
-    blob.make_public()  # ⚠️ 如果需要私有分享，可以改為產生簽名 URL
-    return blob.public_url
-
-def generate_posture_chart(minutes=10):
-    records = get_recent_records(minutes)
-    summary = summarize_records(records)
-    image_path = generate_chart_image(summary, minutes)
-    remote_name = os.path.basename(image_path)
-    image_url = upload_to_firebase(image_path, remote_name)
-    return image_url
-
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
 def list_collections():
