@@ -1,5 +1,0 @@
-classes = 2
-train  = D:/YOLO/darknet-master/build/darknet/x64/data/train.txt
-valid = D:/yolo/darknet-master/build/darknet/x64/data/test/test.txt
-names = D:/yolo/darknet-master/build/darknet/x64/data/movingdetect.names
-backup = backup/
