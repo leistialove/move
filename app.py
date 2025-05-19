@@ -136,15 +136,13 @@ def handle_message(event):
             )
         )    
     
-
-    now = datetime.utcnow() + timedelta(hours=8) # 取得現在 UTC 時間
-    doc_id = now.strftime("%d%H%M%S") #時間格式 "%Y%m%d%H%M%S%f"
+    doc_id = datetime.now().strftime("%d%H%M%S") #時間格式 "%Y%m%d%H%M%S%f"
     
     # 1) 先在 chat_log 底下建立或更新這個 user_id 的文件
     db.collection("chat_log") \
       .document(user_id) \
       .set(
-          {"last_update": now},   # 你想存的欄位都可以放這裡
+          {"last_update": doc_id},   # 你想存的欄位都可以放這裡
           merge=True              # merge=True 表示不會覆蓋掉子集合
       )
 
