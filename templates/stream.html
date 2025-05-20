@@ -1,11 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <meta charset="utf-8">
-    <title>即時畫面</title>
+  <meta charset="UTF-8">
+  <title>室內活動分析系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background-color: #2d3436;
+      color: white;
+      padding: 1rem 0;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+    }
+    .container {
+      padding: 2rem;
+    }
+    .video-frame {
+      border: 3px solid #0984e3;
+      border-radius: 12px;
+      width: 720px;
+      max-width: 90%;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .status-panel {
+      margin-top: 1.5rem;
+      background: white;
+      border-radius: 10px;
+      display: inline-block;
+      padding: 1rem 2rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .status-item {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+    .status-ok {
+      color: green;
+      font-weight: bold;
+    }
+    .current-posture {
+      font-size: 1.4rem;
+      color: #2d3436;
+    }
+  </style>
 </head>
 <body>
-    <h2>YOLO 分析即時畫面</h2>
-    <img src="{{ url_for('stream') }}" width="720">
+  <header>室內活動分析系統</header>
+  <div class="container">
+    <img src="{{ url_for('stream') }}" class="video-frame" alt="YOLO Stream">
+    <div class="status-panel">
+      <div class="status-item">系統狀態：<span class="status-ok">🟢 運作中</span></div>
+      <div class="status-item current-posture">當前動作：<strong>{{ current_posture }}</strong></div>
+    </div>
+  </div>
 </body>
 </html>
