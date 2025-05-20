@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>即時畫面串流</title>
-    <meta http-equiv="refresh" content="0.3">
+    <meta charset="utf-8">
+    <title>即時畫面</title>
 </head>
 <body>
-    <h2>YOLO 分析畫面</h2>
-    {% if image_data %}
-        <img src="data:image/jpeg;base64,{{ image_data }}" width="640">
-    {% else %}
-        <p>尚未收到任何畫面</p>
-    {% endif %}
+    <h2>YOLO 分析即時畫面</h2>
+    <img src="{{ url_for('stream') }}" width="720">
 </body>
 </html>
