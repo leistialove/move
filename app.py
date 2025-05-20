@@ -63,7 +63,7 @@ def update_status():
     current_status = data.get("status", "❓ 未知狀態")
     return "OK"
 
-MJPEG_SOURCE = "https://a5fc-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
+MJPEG_SOURCE = "https://f203-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
 
 @app.route('/stream')
 def stream():
