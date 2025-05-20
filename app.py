@@ -49,6 +49,20 @@ handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 import requests
 from flask import Response
 
+current_status = "🟢 偵測中"
+# 前端 AJAX 每秒 GET 狀態
+@app.route('/status')
+def get_status():
+    return jsonify({"status": current_status})
+
+# 本機 YOLO 用 POST 更新狀態
+@app.route('/status', methods=['POST'])
+def update_status():
+    global current_status
+    data = request.json
+    current_status = data.get("status", "❓ 未知狀態")
+    return "OK"
+
 MJPEG_SOURCE = "https://a5fc-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
 
 @app.route('/stream')
