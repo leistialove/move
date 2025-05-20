@@ -45,9 +45,9 @@
       color: green;
       font-weight: bold;
     }
-    .current-posture {
-      font-size: 1.4rem;
-      color: #2d3436;
+    .status-warn {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -56,9 +56,29 @@
   <div class="container">
     <img src="{{ url_for('stream') }}" class="video-frame" alt="YOLO Stream">
     <div class="status-panel">
-      <div class="status-item">系統狀態：<span class="status-ok">🟢 運作中</span></div>
-      <div class="status-item current-posture">當前動作：<strong>{{ current_posture }}</strong></div>
+      <div class="status-item">系統狀態：<span id="status-value" class="status-ok">🟢 偵測中</span></div>
     </div>
   </div>
+
+  <script>
+    function updateStatus() {
+      fetch("/status")
+        .then(res => res.json())
+        .then(data => {
+          const text = data.status;
+          const el = document.getElementById("status-value");
+          el.textContent = text;
+
+          if (text.includes("🟢") || text.includes("偵測中")) {
+            el.className = "status-ok";
+          } else {
+            el.className = "status-warn";
+          }
+        });
+    }
+
+    setInterval(updateStatus, 1000); // 每秒更新一次
+    updateStatus();
+  </script>
 </body>
 </html>
