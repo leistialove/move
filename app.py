@@ -46,20 +46,23 @@ api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 
-# === 新增變數儲存最新圖片 ===
-latest_image = None
+import requests
+from flask import Response
 
-# === 接收本機 YOLO 傳來的 base64 畫面 ===
-@app.route('/upload', methods=['POST'])
-def upload_image():
-    global latest_image
-    data = request.json
-    latest_image = data.get("image")  # base64 編碼字串
-    return "OK"
+MJPEG_SOURCE = "https://a5fc-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
 
 @app.route('/stream')
-def stream_view():
-    return render_template('stream.html', image_data=latest_image)
+def stream():
+    def generate():
+        with requests.get(MJPEG_SOURCE, stream=True) as r:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    yield chunk
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/view')
+def view_stream():
+    return render_template('stream.html')
 
 # ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
