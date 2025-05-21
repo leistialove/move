@@ -168,9 +168,9 @@ def handle_postback(event):
     user_id = event.source.user_id
     
     duration_map = {
-        "report_10": 1,
-        "report_30": 3,
-        "report_60": 5
+        "report_10": 10,
+        "report_30": 30,
+        "report_60": 60
     }
 
     if postback_data in duration_map:
@@ -212,8 +212,10 @@ def handle_postback(event):
             )
         )
 '''
+
+from matplotlib import pyplot as plt
+
 def get_recent_records(minutes):
-    db = firestore.client()
     now = datetime.now()
     docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
 
@@ -223,19 +225,10 @@ def get_recent_records(minutes):
     return records
 
 def summarize_records(records):
-    total_standing = 0
-    total_sitting = 0
-    total_movement = 0
-
-    for r in records:
-        total_standing += r.get("standing_frames", 0)
-        total_sitting += r.get("sitting_frames", 0)
-        total_movement += r.get("total_movement", 0)
-
     return {
-        "站立秒數": total_standing,
-        "坐下秒數": total_sitting,
-        "移動量": total_movement
+        "站立秒數": sum(r.get("standing_frames", 0) for r in records),
+        "坐下秒數": sum(r.get("sitting_frames", 0) for r in records),
+        "移動量": sum(r.get("total_movement", 0) for r in records)
     }
 
 import matplotlib.pyplot as plt
