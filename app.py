@@ -232,18 +232,19 @@ def summarize_records(records):
     }
 
 #import matplotlib.pyplot as plt
-import matplotlib
+from matplotlib import font_manager
 def generate_chart_image(summary, minutes):
-    matplotlib.rcParams['font.sans-serif'] = ['Taipei Sans TC Beta', 'Microsoft JhengHei', 'SimHei']
-    matplotlib.rcParams['axes.unicode_minus'] = False
+    font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
+    font_prop = font_manager.FontProperties(fname=font_path)
+
     labels = ["站立", "坐下"]
     values = [summary["站立秒數"], summary["坐下秒數"]]
 
     plt.figure(figsize=(6, 6))
     plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-    plt.title(f"{minutes} 分鐘內站坐分佈")
-    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center")
-    
+    plt.title(f"{minutes} 分鐘內站坐分佈", fontproperties=font_prop)
+    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center", fontproperties=font_prop)
+
     save_path = f"/tmp/report_{minutes}.png"
     plt.savefig(save_path)
     plt.close()
