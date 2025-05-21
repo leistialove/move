@@ -190,10 +190,15 @@ def handle_postback(event):
         )
 
 from matplotlib import pyplot as plt
-
+from google.cloud.firestore import SERVER_TIMESTAMP
 def get_recent_records(minutes):
     now = datetime.now()
-    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
+    cutoff = now - timedelta(minutes=minutes)
+    docs = db.collection("yolo_detections")\
+            .where("timestamp", ">=", cutoff)\
+            .order_by("timestamp", direction=firestore.Query.DESCENDING)\
+            .stream()
+    #docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
 
     records = []
     for doc in docs:
@@ -237,7 +242,7 @@ def generate_chart_image(summary, minutes):
         fontproperties=font_prop,
         fontsize=30
     )
-
+    plt.tight_layout()  # 🔧 可改善邊緣裁切
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
     plt.savefig(save_path)
     plt.close()
