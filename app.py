@@ -221,10 +221,21 @@ def generate_chart_image(summary, minutes):
         labels=labels,
         autopct="%1.1f%%",
         startangle=90,
-        textprops={'fontproperties': font_prop}
+        textprops={
+            'fontproperties': font_prop,
+            'fontsize': 20       # ⬅️ 圓餅圖中文字大小
+        }
     )
-    plt.title(f"{minutes} 分鐘內站坐分佈", fontproperties=font_prop)
-    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center", fontproperties=font_prop)
+    plt.title(f"{minutes} 分鐘內站坐分佈", fontproperties=font_prop, fontsize=24)
+        # ✅ 調整下方註解文字大小
+    plt.figtext(
+        0.5,
+        0.01,
+        f"總移動量：{summary['移動量']:.2f}",
+        ha="center",
+        fontproperties=font_prop,
+        fontsize=20
+    )
 
     save_path = f"/tmp/report_{minutes}.png"
     plt.savefig(save_path)
