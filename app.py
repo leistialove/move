@@ -208,6 +208,7 @@ def summarize_records(records):
     }
 
 from matplotlib import font_manager
+import time
 def generate_chart_image(summary, minutes):
     font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
     font_prop = font_manager.FontProperties(fname=font_path)
@@ -237,7 +238,7 @@ def generate_chart_image(summary, minutes):
         fontsize=30
     )
 
-    save_path = f"/tmp/report_{minutes}.png"
+    save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
     plt.savefig(save_path)
     plt.close()
     return save_path
