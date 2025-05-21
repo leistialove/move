@@ -221,22 +221,17 @@ def generate_chart_image(summary, minutes):
     font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
     font_prop = font_manager.FontProperties(fname=font_path)
 
-    llabels = ["站立", "坐下"]
-    values = [float(summary["站立秒數"]), float(summary["坐下秒數"])]  # 保證是 float
-
+    # === 安全處理：若完全沒有資料 ===
+    if summary["站立秒數"] == 0 and summary["坐下秒數"] == 0:
+        labels = ["無資料", "無資料"]
+        values = [1, 1]
+    else:
+        labels = ["站立", "坐下"]
+        values = [summary["站立秒數"], summary["坐下秒數"]]
+    
     print("🔥 Debug: values =", values)
     print("🔥 Debug: summary =", summary)
     print("🔥 Debug: total =", sum(values))
-
-    if sum(values) == 0:
-        labels = ["無資料", "無資料"]
-        values = [1, 1]
-    elif values[0] == 0:
-        labels = ["無站立", "坐下"]
-        values = [1, values[1]]
-    elif values[1] == 0:
-        labels = ["站立", "無坐下"]
-        values = [values[0], 1]
 
     plt.figure(figsize=(6, 6))
     wedges, texts, autotexts = plt.pie(
@@ -259,7 +254,7 @@ def generate_chart_image(summary, minutes):
         fontproperties=font_prop,
         fontsize=30
     )
-    plt.tight_layout()  # 🔧 可改善邊緣裁切
+    
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
     plt.savefig(save_path)
     plt.close()
