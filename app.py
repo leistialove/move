@@ -231,8 +231,11 @@ def summarize_records(records):
         "移動量": sum(r.get("total_movement", 0) for r in records)
     }
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import matplotlib
 def generate_chart_image(summary, minutes):
+    matplotlib.rcParams['font.sans-serif'] = ['Taipei Sans TC Beta', 'Microsoft JhengHei', 'SimHei']
+    matplotlib.rcParams['axes.unicode_minus'] = False
     labels = ["站立", "坐下"]
     values = [summary["站立秒數"], summary["坐下秒數"]]
 
