@@ -189,30 +189,6 @@ def handle_postback(event):
             )
         )
 
-    '''
-    if postback_data == "report_10":
-        messaging_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text="你選擇了 10 分鐘報告")]
-            )
-        )
-    elif postback_data == "report_30":
-        messaging_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text="你選擇了 30 分鐘報告")]
-            )
-        )
-    elif postback_data == "report_60":
-        messaging_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text="你選擇了 60 分鐘報告")]
-            )
-        )
-'''
-
 from matplotlib import pyplot as plt
 
 def get_recent_records(minutes):
@@ -231,7 +207,6 @@ def summarize_records(records):
         "移動量": sum(r.get("total_movement", 0) for r in records)
     }
 
-#import matplotlib.pyplot as plt
 from matplotlib import font_manager
 def generate_chart_image(summary, minutes):
     font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
@@ -241,7 +216,13 @@ def generate_chart_image(summary, minutes):
     values = [summary["站立秒數"], summary["坐下秒數"]]
 
     plt.figure(figsize=(6, 6))
-    plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+    wedges, texts, autotexts = plt.pie(
+        values,
+        labels=labels,
+        autopct="%1.1f%%",
+        startangle=90,
+        textprops={'fontproperties': font_prop}
+    )
     plt.title(f"{minutes} 分鐘內站坐分佈", fontproperties=font_prop)
     plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center", fontproperties=font_prop)
 
