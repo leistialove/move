@@ -15,7 +15,7 @@ key_dict = json.loads(firebase_json)
 cred = credentials.Certificate(key_dict)
 #firebase_admin.initialize_app(cred)
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'move-92fdd.appspot.com'
+    'storageBucket': 'move-92fdd.firebasestorage.app'
 })
 db = firestore.client()
 
