@@ -72,10 +72,13 @@ MJPEG_SOURCE = "https://4dae-60-244-149-21.ngrok-free.app/video_feed"  # 換成 
 @app.route('/stream')
 def stream():
     def generate():
-        with requests.get(MJPEG_SOURCE, stream=True) as r:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
+        try:
+            with requests.get(MJPEG_SOURCE, stream=True, timeout=10) as r:
+                for chunk in r.iter_content(chunk_size=1024):
                     yield chunk
+        except Exception as e:
+            print(f"🚨 MJPEG 串流連線錯誤：{e}")
+            yield b''  # 預防整個頁面掛掉
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/view')
