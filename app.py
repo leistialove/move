@@ -220,18 +220,21 @@ def generate_chart_image(summary, minutes):
 
     labels = ["站立", "坐下"]
     values = [summary["站立秒數"], summary["坐下秒數"]]
+    
+    # 小數點處理：避免 float 誤差
+    stand = values[0]
+    sit = values[1]
 
-    # 防止 [0, N] 或 [N, 0] 導致 NaN 錯誤
-    if sum(values) == 0:
+    if stand + sit == 0:
         labels = ["無資料", "無資料"]
         values = [1, 1]
-    elif values[0] == 0:
+    elif stand == 0:
         labels = ["無站立", "坐下"]
-        values = [1, values[1]]
-    elif values[1] == 0:
+        values = [1, sit]
+    elif sit == 0:
         labels = ["站立", "無坐下"]
-        values = [values[0], 1]
-        
+        values = [stand, 1]
+
     plt.figure(figsize=(6, 6))
     wedges, texts, autotexts = plt.pie(
         values,
