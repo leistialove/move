@@ -40,7 +40,7 @@ from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
 )
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', '你的 Channel Access Token')
 LINE_CHANNEL_SECRET       = os.getenv('LINE_CHANNEL_SECRET', '你的 Channel Secret')
@@ -192,17 +192,20 @@ def handle_postback(event):
 from matplotlib import pyplot as plt
 from google.cloud.firestore import SERVER_TIMESTAMP
 def get_recent_records(minutes):
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=8)))  # 台灣時間
     cutoff = now - timedelta(minutes=minutes)
-    docs = db.collection("yolo_detections")\
-            .where("timestamp", ">=", cutoff)\
-            .order_by("timestamp", direction=firestore.Query.DESCENDING)\
-            .stream()
+    print("📌 查詢最近時間：", cutoff)
+    
+    docs = db.collection("yolo_detections") \
+        .where("timestamp", ">=", cutoff) \
+        .order_by("timestamp", direction=firestore.Query.DESCENDING) \
+        .stream()
     #docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
 
     records = []
     for doc in docs:
         records.append(doc.to_dict())
+    print(f"🔥 拿到 {len(records)} 筆資料")
     return records
 
 def summarize_records(records):
