@@ -50,6 +50,38 @@ api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
 
+import requests
+from flask import Response
+
+current_status = "🟢 偵測中"
+# 前端 AJAX 每秒 GET 狀態
+@app.route('/status')
+def get_status():
+    return jsonify({"status": current_status})
+
+# 本機 YOLO 用 POST 更新狀態
+@app.route('/status', methods=['POST'])
+def update_status():
+    global current_status
+    data = request.json
+    current_status = data.get("status", "❓ 未知狀態")
+    return "OK"
+
+MJPEG_SOURCE = "https://1ddb-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
+
+@app.route('/stream')
+def stream():
+    def generate():
+        with requests.get(MJPEG_SOURCE, stream=True) as r:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    yield chunk
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/view')
+def view_stream():
+    return render_template('stream.html')
+
 # ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
 def callback():
@@ -254,7 +286,7 @@ def generate_chart_image(summary, minutes):
         fontproperties=font_prop,
         fontsize=30
     )
-    
+
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
     plt.savefig(save_path)
     plt.close()
