@@ -7,13 +7,16 @@ load_dotenv()
 
 # ===== Firebase Firestore 設定 =====
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, storage
 
 # 從環境變數載入 Firebase 金鑰 JSON
 firebase_json = os.getenv("FIREBASE_CREDENTIAL_JSON")
 key_dict = json.loads(firebase_json)
 cred = credentials.Certificate(key_dict)
-firebase_admin.initialize_app(cred)
+#firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'move-92fdd.appspot.com'
+})
 db = firestore.client()
 
 # ===== Flask App =====
@@ -29,7 +32,8 @@ from linebot.v3.messaging import (
     ReplyMessageRequest,
     TextMessage,
     FlexMessage,
-    FlexContainer   
+    FlexContainer,
+    ImageMessage   
 )
 from linebot.models import PostbackEvent
 from linebot.v3.webhooks import (
@@ -45,38 +49,6 @@ config        = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 api_client    = ApiClient(config)
 messaging_api = MessagingApi(api_client)
 handler       = WebhookHandler(channel_secret=LINE_CHANNEL_SECRET)
-
-import requests
-from flask import Response
-
-current_status = "🟢 偵測中"
-# 前端 AJAX 每秒 GET 狀態
-@app.route('/status')
-def get_status():
-    return jsonify({"status": current_status})
-
-# 本機 YOLO 用 POST 更新狀態
-@app.route('/status', methods=['POST'])
-def update_status():
-    global current_status
-    data = request.json
-    current_status = data.get("status", "❓ 未知狀態")
-    return "OK"
-
-MJPEG_SOURCE = "https://f203-60-244-149-21.ngrok-free.app/video_feed"  # 換成 ngrok 給的網址
-
-@app.route('/stream')
-def stream():
-    def generate():
-        with requests.get(MJPEG_SOURCE, stream=True) as r:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
-                    yield chunk
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-@app.route('/view')
-def view_stream():
-    return render_template('stream.html')
 
 # ===== LINE Webhook 接收 =====
 @app.route('/callback', methods=['POST'])
@@ -195,6 +167,29 @@ def handle_postback(event):
     postback_data = event.postback.data
     user_id = event.source.user_id
     
+    duration_map = {
+        "report_10": 1,
+        "report_30": 3,
+        "report_60": 5
+    }
+
+    if postback_data in duration_map:
+        minutes = duration_map[postback_data]
+        image_url = generate_posture_chart(minutes)
+
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    ImageMessage(
+                        original_content_url=image_url,
+                        preview_image_url=image_url
+                    )
+                ]
+            )
+        )
+
+    '''
     if postback_data == "report_10":
         messaging_api.reply_message(
             ReplyMessageRequest(
@@ -216,6 +211,63 @@ def handle_postback(event):
                 messages=[TextMessage(text="你選擇了 60 分鐘報告")]
             )
         )
+'''
+def get_recent_records(minutes):
+    db = firestore.client()
+    now = datetime.now()
+    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
+
+    records = []
+    for doc in docs:
+        records.append(doc.to_dict())
+    return records
+
+def summarize_records(records):
+    total_standing = 0
+    total_sitting = 0
+    total_movement = 0
+
+    for r in records:
+        total_standing += r.get("standing_frames", 0)
+        total_sitting += r.get("sitting_frames", 0)
+        total_movement += r.get("total_movement", 0)
+
+    return {
+        "站立秒數": total_standing,
+        "坐下秒數": total_sitting,
+        "移動量": total_movement
+    }
+
+import matplotlib.pyplot as plt
+def generate_chart_image(summary, minutes):
+    labels = ["站立", "坐下"]
+    values = [summary["站立秒數"], summary["坐下秒數"]]
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+    plt.title(f"{minutes} 分鐘內站坐分佈")
+    plt.figtext(0.5, 0.01, f"總移動量：{summary['移動量']:.2f}", ha="center")
+    
+    save_path = f"/tmp/report_{minutes}.png"
+    plt.savefig(save_path)
+    plt.close()
+    return save_path
+
+def upload_to_firebase(local_path, remote_filename):
+    bucket = storage.bucket()
+    blob = bucket.blob(f"charts/{remote_filename}")
+    blob.upload_from_filename(local_path)
+    blob.make_public()  # ⚠️ 如果需要私有分享，可以改為產生簽名 URL
+    return blob.public_url
+
+def generate_posture_chart(minutes=10):
+    records = get_recent_records(minutes)
+    summary = summarize_records(records)
+    image_path = generate_chart_image(summary, minutes)
+    remote_name = os.path.basename(image_path)
+    image_url = upload_to_firebase(image_path, remote_name)
+    return image_url
+
 # ===== API：列出 Firestore 中所有集合名稱（模擬 /tables）=====
 @app.route('/tables', methods=['GET'])
 def list_collections():
