@@ -326,8 +326,10 @@ def get_collection_data_api(collection):
 # ===== Web UI：Firebase 瀏覽與刪除 =====
 @app.route('/firebase')
 def firebase_home():
-    names = [c.id for c in db.collections()]
+    exclude = ['yolo_detections']
+    names = [c.id for c in db.collections() if c.id not in exclude]
     return render_template('firebase_home.html', collections=names)
+
 
 @app.route('/firebase/view/<collection>')
 def view_collection(collection):
