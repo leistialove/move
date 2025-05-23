@@ -159,10 +159,34 @@ def handle_message(event):
 }
         line_flex_str=json.dumps(line_flex_json)
         messaging_api.reply_message(
-          ReplyMessageRequest(
-            reply_token=event.reply_token,
-            messages=[FlexMessage(altText="坐臥時長-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[FlexMessage(altText="坐臥時長-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
           )
+        )
+    elif user_text == "活動量":
+        steps, level, message = estimate_steps_and_activity()
+        line_flex_json = {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {"type": "text", "text": f"一小時內活動分析", "weight": "bold", "size": "xl", "align": "center"},
+                    {"type": "text", "text": f"推估步數：{steps} 步", "size": "lg", "margin": "md"},
+                    {"type": "text", "text": f"活動量評估：{level}", "size": "lg", "margin": "md", "color": "#555555"},
+                    {"type": "text", "text": message, "wrap": True, "margin": "md", "color": "#ff4444"}
+                ]
+            }
+        }
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[FlexMessage(
+                    altText="一小時活動量分析", 
+                    contents=FlexContainer.from_json(json.dumps(line_flex_json))
+                )]
+            )
         )
     else:
         bot_reply = f"你說：「{user_text}」"
@@ -195,6 +219,23 @@ def handle_message(event):
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
+def estimate_steps_and_activity():
+    records = get_recent_records(60)
+    total_movement = sum(r.get("total_movement", 0) for r in records)
+    estimated_steps = int(total_movement / 0.6)
+
+    if estimated_steps < 2000:
+        level = "低活動量"
+        message = "今天活動量較少，建議多起身走動一下喔！"
+    elif estimated_steps < 4000:
+        level = "中等活動量"
+        message = "活動量還不錯，再多走幾步更健康！"
+    else:
+        level = "高活動量"
+        message = "非常棒！你今天很活躍喔～繼續保持！"
+
+    return estimated_steps, level, message    
+
 @handler.add(PostbackEvent)
 def handle_postback(event):
     postback_data = event.postback.data
