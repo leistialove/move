@@ -1,20 +1,52 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>Firebase Collections</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    a { text-decoration: none; color: #007bff; }
-    li { margin-bottom: 8px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Firebase 資料瀏覽</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f4f6f8;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .collection-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 20px 30px;
+            min-width: 220px;
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card a {
+            text-decoration: none;
+            color: #2d89ef;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <h2>可用的 Firebase Collections：</h2>
-  <ul>
-    {% for col in collections %}
-      <li><a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a></li>
-    {% endfor %}
-  </ul>
+    <h1>🔥 可用的 Firebase Collections 🔥</h1>
+    <div class="collection-list">
+        {% for col in collections %}
+        <div class="card">
+            <a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a>
+        </div>
+        {% endfor %}
+    </div>
 </body>
 </html>
