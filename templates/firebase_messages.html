@@ -2,43 +2,50 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ doc_id }} 的訊息內容</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", sans-serif;
             background-color: #f0f2f5;
-            padding: 40px;
+            padding: 20px;
         }
         h1 {
             color: #2c3e50;
             text-align: center;
+            font-size: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
         }
         table {
-            width: 90%;
-            margin: 30px auto;
+            width: 100%;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 600px;
         }
         th, td {
-            padding: 12px 18px;
-            border: 1px solid #ddd;
+            padding: 12px;
+            border: 1px solid #ccc;
             text-align: left;
+            font-size: 14px;
         }
         th {
             background-color: #2d89ef;
             color: white;
         }
         tr:hover {
-            background-color: #f1f1f1;
+            background-color: #f9f9f9;
         }
         .delete-link {
             color: #e74c3c;
             text-decoration: none;
+            font-size: 14px;
         }
         .back {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
         }
         .back a {
             color: #999;
@@ -47,31 +54,33 @@
     </style>
 </head>
 <body>
-    <h1>🗂️ 「{{ collection }} / {{ doc_id }}」的訊息記錄</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>訊息 ID</th>
-                <th>時間</th>
-                <th>內容</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for msg in messages %}
-            <tr>
-                <td>{{ msg.id }}</td>
-                <td>{{ msg.timestamp or '-' }}</td>
-                <td>{{ msg.text or msg.content or '-' }}</td>
-                <td>
-                    <a class="delete-link"
-                       href="{{ url_for('delete_message', collection=collection, doc_id=doc_id, msg_id=msg.id) }}"
-                       onclick="return confirm('確定要刪除這則訊息嗎？')">刪除</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>🗂️ {{ collection }} / {{ doc_id }} 的訊息記錄</h1>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>訊息 ID</th>
+                    <th>時間</th>
+                    <th>內容</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for msg in messages %}
+                <tr>
+                    <td>{{ msg.id }}</td>
+                    <td>{{ msg.timestamp or '-' }}</td>
+                    <td>{{ msg.content or '-' }}</td>
+                    <td>
+                        <a class="delete-link"
+                           href="{{ url_for('delete_message', collection=collection, doc_id=doc_id, msg_id=msg.id) }}"
+                           onclick="return confirm('確定要刪除這則訊息嗎？')">刪除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <div class="back">
         <a href="{{ url_for('view_collection', collection=collection) }}">← 返回 Document</a>
     </div>
