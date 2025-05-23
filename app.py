@@ -222,21 +222,25 @@ def handle_message(event):
     
 def estimate_steps_and_activity():
     records = get_recent_records(60)
-    total_movement = sum(r.get("total_movement", 0) for r in records)
-    estimated_steps = int(total_movement / 0.6)
+    total_pixel = sum(r.get("total_movement", 0) for r in records)
+    
+    PIXELS_PER_METER = 100       # 建議依實際相機視角微調
+    METERS_PER_STEP = 0.6
 
-    if estimated_steps < 2000:
+    total_meters = total_pixel / PIXELS_PER_METER
+    estimated_steps = int(total_meters / METERS_PER_STEP)
+
+    if estimated_steps < 200:
         level = "低活動量"
-        message = "今天活動量較少，建議多起身走動一下喔！"
-    elif estimated_steps < 4000:
+        message = "一小時內活動量偏低，建議多走動一下喔～"
+    elif estimated_steps < 600:
         level = "中等活動量"
-        message = "活動量還不錯，再多走幾步更健康！"
+        message = "活動量不錯，再多動一點會更健康！"
     else:
         level = "高活動量"
-        message = "非常棒！你今天很活躍喔～繼續保持！"
+        message = "很棒！你今天活動量很充足，繼續保持喔！" 
 
-    return estimated_steps, level, message    
-
+    return estimated_steps, level, message
 @handler.add(PostbackEvent)
 def handle_postback(event):
     postback_data = event.postback.data
