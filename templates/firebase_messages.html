@@ -1,26 +1,79 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head><meta charset="UTF-8"><title>Messages in {{ collection }}/{{ doc_id }}</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ doc_id }} 的訊息內容</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f0f2f5;
+            padding: 40px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #2d89ef;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .delete-link {
+            color: #e74c3c;
+            text-decoration: none;
+        }
+        .back {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .back a {
+            color: #999;
+            text-decoration: none;
+        }
+    </style>
+</head>
 <body>
-  <h2>Collection: {{ collection }} / Document: {{ doc_id }}</h2>
-  <table border="1">
-    <tr>
-      {% for key in messages[0].keys() %}<th>{{ key }}</th>{% endfor %}
-      <th>刪除</th>
-    </tr>
-    {% for msg in messages %}
-      <tr>
-        {% for v in msg.values() %}<td>{{ v }}</td>{% endfor %}
-        <td>
-          <a href="{{ url_for('delete_message',
-                    collection=collection,
-                    doc_id=doc_id,
-                    msg_id=msg['id']) }}">刪除</a>
-
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
-  <p><a href="{{ url_for('view_collection', collection=collection) }}">← 回 Document 列表</a></p>
+    <h1>🗂️ 「{{ collection }} / {{ doc_id }}」的訊息記錄</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訊息 ID</th>
+                <th>時間</th>
+                <th>內容</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in messages %}
+            <tr>
+                <td>{{ msg.id }}</td>
+                <td>{{ msg.timestamp or '-' }}</td>
+                <td>{{ msg.text or msg.content or '-' }}</td>
+                <td>
+                    <a class="delete-link"
+                       href="{{ url_for('delete_message', collection=collection, doc_id=doc_id, msg_id=msg.id) }}"
+                       onclick="return confirm('確定要刪除這則訊息嗎？')">刪除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="back">
+        <a href="{{ url_for('view_collection', collection=collection) }}">← 返回 Document</a>
+    </div>
 </body>
 </html>
