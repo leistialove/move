@@ -254,25 +254,24 @@ def generate_chart_image(summary, minutes):
     font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
     font_prop = font_manager.FontProperties(fname=font_path)
 
-    # 模擬「躺下」佔坐下的 50%（或你自己設定）
-    estimated_lying = summary["坐下秒數"] * 0.5
-    combined_sit_lie = summary["坐下秒數"]
+    # === 模擬躺下比例：假設坐下的 30% 為躺下
+    lying_ratio = 0.3
+    total_sitting = summary["坐下秒數"]
+    estimated_lying = total_sitting * lying_ratio
+    estimated_sitting_only = total_sitting - estimated_lying
 
-    # === 安全處理：若完全沒有資料 ===
-    '''if summary["站立秒數"] == 0 and summary["坐下秒數"] == 0:
-        labels = ["無資料", "無資料"]
-        values = [1, 1]
-    else:
-        labels = ["站立", "坐下"]
-        values = [summary["站立秒數"], summary["坐下秒數"]]'''
+    # === 整理資料（含三類）
+    labels = ["站立", "坐下（估）", "躺下（估）"]
+    values = [
+        summary["站立秒數"],
+        estimated_sitting_only,
+        estimated_lying
+    ]
     
         # 如果沒有資料
-    if summary["站立秒數"] == 0 and combined_sit_lie == 0:
-        labels = ["無資料", "無資料"]
-        values = [1, 1]
-    else:
-        labels = ["站立", "坐下+躺下"]
-        values = [summary["站立秒數"], combined_sit_lie]
+    if sum(values) == 0:
+        labels = ["無資料", "無資料", "無資料"]
+        values = [1, 1, 1]
     
     plt.figure(figsize=(6, 6))
     wedges, texts, autotexts = plt.pie(
@@ -282,27 +281,29 @@ def generate_chart_image(summary, minutes):
         startangle=90,
         textprops={
             'fontproperties': font_prop,
-            'fontsize': 30       # ⬅️ 圓餅圖中文字大小
+            'fontsize': 26       # ⬅️ 圓餅圖中文字大小
         }
     )
-    plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=36)
+    plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=32)
     # 🆕 顯示額外資訊（站、坐+躺、推估躺）
-    extra_text = f"""
-    站立：{summary['站立秒數']} 秒
-    坐下+躺下：{combined_sit_lie:.0f} 秒
-    （推估躺下：約 {estimated_lying:.0f} 秒）
-    移動量：{summary['移動量']:.2f}
+    info = f"""
+    ▪ 站立：{summary['站立秒數']} 秒
+    ▪ 坐下（估）：{estimated_sitting_only:.0f} 秒
+    ▪ 躺下（估）：{estimated_lying:.0f} 秒
+    ▪ 總移動量：{summary['移動量']:.2f}
+    （* 躺下為推估，未實際辨識）
     """
 
      # ✅ 調整下方註解文字大小
     plt.figtext(
         0.5,
         0.01,
-        f"總移動量：{summary['移動量']:.2f}",
+        info.strip(),
+        #f"總移動量：{summary['移動量']:.2f}",
         ha="center",
         fontproperties=font_prop,
         fontsize=22, 
-        linespacing=1.5
+        linespacing=1.4
     )
 
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
