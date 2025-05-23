@@ -164,7 +164,7 @@ def handle_message(event):
                 messages=[FlexMessage(altText="坐臥時長-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
           )
         )
-    elif user_text == "活動量":
+    elif user_text == "移動範圍":
         steps, level, message = estimate_steps_and_activity()
         line_flex_json = {
             "type": "bubble",
