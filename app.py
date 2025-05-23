@@ -101,7 +101,7 @@ def handle_message(event):
     user_text = event.message.text
     
     # 回覆 LINE 使用者
-    if user_text == "分析報告":
+    if user_text == "坐臥時長":
         bot_reply = user_text
         line_flex_json={
           "type": "bubble",
@@ -161,7 +161,7 @@ def handle_message(event):
         messaging_api.reply_message(
           ReplyMessageRequest(
             reply_token=event.reply_token,
-            messages=[FlexMessage(altText="分析報告-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
+            messages=[FlexMessage(altText="坐臥時長-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
           )
         )
     else:
@@ -229,11 +229,11 @@ def get_recent_records(minutes):
     cutoff = now - timedelta(minutes=minutes)
     print("📌 查詢最近時間：", cutoff)
     
-    docs = db.collection("yolo_detections") \
+    '''docs = db.collection("yolo_detections") \
         .where("timestamp", ">=", cutoff) \
         .order_by("timestamp", direction=firestore.Query.DESCENDING) \
-        .stream()
-    #docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
+        .stream()'''
+    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
 
     records = []
     for doc in docs:
@@ -254,18 +254,26 @@ def generate_chart_image(summary, minutes):
     font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
     font_prop = font_manager.FontProperties(fname=font_path)
 
+    # 模擬「躺下」佔坐下的 50%（或你自己設定）
+    estimated_lying = summary["坐下秒數"] * 0.5
+    combined_sit_lie = summary["坐下秒數"]
+
     # === 安全處理：若完全沒有資料 ===
-    if summary["站立秒數"] == 0 and summary["坐下秒數"] == 0:
+    '''if summary["站立秒數"] == 0 and summary["坐下秒數"] == 0:
         labels = ["無資料", "無資料"]
         values = [1, 1]
     else:
         labels = ["站立", "坐下"]
-        values = [summary["站立秒數"], summary["坐下秒數"]]
+        values = [summary["站立秒數"], summary["坐下秒數"]]'''
     
-    print("🔥 Debug: values =", values)
-    print("🔥 Debug: summary =", summary)
-    print("🔥 Debug: total =", sum(values))
-
+        # 如果沒有資料
+    if summary["站立秒數"] == 0 and combined_sit_lie == 0:
+        labels = ["無資料", "無資料"]
+        values = [1, 1]
+    else:
+        labels = ["站立", "坐下+躺下"]
+        values = [summary["站立秒數"], combined_sit_lie]
+    
     plt.figure(figsize=(6, 6))
     wedges, texts, autotexts = plt.pie(
         values,
@@ -277,15 +285,24 @@ def generate_chart_image(summary, minutes):
             'fontsize': 30       # ⬅️ 圓餅圖中文字大小
         }
     )
-    plt.title(f"{minutes} 分鐘內站坐分佈", fontproperties=font_prop, fontsize=36)
-        # ✅ 調整下方註解文字大小
+    plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=36)
+    # 🆕 顯示額外資訊（站、坐+躺、推估躺）
+    extra_text = f"""
+    站立：{summary['站立秒數']} 秒
+    坐下+躺下：{combined_sit_lie:.0f} 秒
+    （推估躺下：約 {estimated_lying:.0f} 秒）
+    移動量：{summary['移動量']:.2f}
+    """
+
+     # ✅ 調整下方註解文字大小
     plt.figtext(
         0.5,
         0.01,
         f"總移動量：{summary['移動量']:.2f}",
         ha="center",
         fontproperties=font_prop,
-        fontsize=30
+        fontsize=22, 
+        linespacing=1.5
     )
 
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
@@ -367,7 +384,7 @@ def view_messages(collection, doc_id):
                 'timestamp': data.get('timestamp', '-'),
                 'content': full_text
             })
-            
+
         return render_template(
             'firebase_messages.html',
             collection=collection,
