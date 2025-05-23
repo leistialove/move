@@ -261,7 +261,7 @@ def generate_chart_image(summary, minutes):
     estimated_sitting_only = total_sitting - estimated_lying
 
     # === 整理資料（含三類）
-    labels = ["站立", "坐下（估）", "躺下（估）"]
+    labels = ["站立", "坐下", "躺下"]
     values = [
         summary["站立秒數"],
         estimated_sitting_only,
@@ -281,12 +281,12 @@ def generate_chart_image(summary, minutes):
         startangle=90,
         textprops={
             'fontproperties': font_prop,
-            'fontsize': 26       # ⬅️ 圓餅圖中文字大小
+            'fontsize': 22       # ⬅️ 圓餅圖中文字大小
         }
     )
     plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=32)
     # 🆕 顯示額外資訊（站、坐+躺、推估躺）
-    summary_text = f"站立：{summary['站立秒數']:.0f} 秒 坐下（估）：{estimated_sitting_only:.0f} 秒 躺下（估）：{estimated_lying:.0f} 秒"
+    summary_text = f"站：{summary['站立秒數']:.0f} 秒 坐：{estimated_sitting_only:.0f} 秒 躺：{estimated_lying:.0f} 秒"
 
      # ✅ 調整下方註解文字大小
     plt.figtext(
@@ -296,7 +296,7 @@ def generate_chart_image(summary, minutes):
         #f"總移動量：{summary['移動量']:.2f}",
         ha="center",
         fontproperties=font_prop,
-        fontsize=22
+        fontsize=18
     )
     # ✅ 加入提示鼓勵文字（只有坐+躺多於站時才顯示）
     if estimated_sitting_only + estimated_lying > summary["站立秒數"]:
@@ -306,10 +306,10 @@ def generate_chart_image(summary, minutes):
             encourage_text,
             ha="center",
             fontproperties=font_prop,
-            fontsize=22,
+            fontsize=20,
             color="red"
         )
-        
+
     save_path = f"/tmp/report_{minutes}_{int(time.time())}.png"
     plt.savefig(save_path)
     plt.close()
