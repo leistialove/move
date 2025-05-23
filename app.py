@@ -357,8 +357,17 @@ def view_messages(collection, doc_id):
                 # 轉成字串，去掉微秒跟時區標誌
                 data['timestamp'] = local.strftime("%Y-%m-%d %H:%M:%S")
             
-            records.append({'id': m.id, **data})
-        
+            # ✅ 這裡是重點：合併使用者與機器人回應
+            user_text = data.get('user_text', '-')
+            bot_reply = data.get('bot_reply', '-')
+            full_text = f"{user_text} ➜ {bot_reply}"
+
+            records.append({
+                'id': m.id,
+                'timestamp': data.get('timestamp', '-'),
+                'content': full_text
+            })
+            
         return render_template(
             'firebase_messages.html',
             collection=collection,
