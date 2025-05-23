@@ -165,6 +165,7 @@ def handle_message(event):
           )
         )
     elif user_text == "移動範圍":
+        bot_reply = user_text
         steps, level, message = estimate_steps_and_activity()
         line_flex_json = {
             "type": "bubble",
