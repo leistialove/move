@@ -298,15 +298,17 @@ def generate_chart_image(summary, minutes):
         fontproperties=font_prop,
         fontsize=18
     )
-    # ✅ 加入提示鼓勵文字（只有坐+躺多於站時才顯示）
-    if estimated_sitting_only + estimated_lying > summary["站立秒數"]:
-        encourage_text = "💡 久坐久躺不健康，建議多起身活動一下喔！"
+
+    # ➤ 判斷是否「站立 < 1/3 總時間」，顯示鼓勵文字
+    total_time = summary['站立秒數'] + estimated_sitting_only + estimated_lying
+    if summary['站立秒數'] < total_time / 3:
+        encourage_text = "久坐久躺不健康，建議多起身活動一下喔！"
         plt.figtext(
-            0.5, 0.06,  # 再稍微上面一點
+            0.5, 0.06,
             encourage_text,
             ha="center",
             fontproperties=font_prop,
-            fontsize=20,
+            fontsize=22,
             color="red"
         )
 
