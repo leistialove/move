@@ -189,6 +189,21 @@ def handle_message(event):
                 )]
             )
         )
+    elif user_text == "分析報告":
+        charts = generate_full_analysis_report()
+
+        messages = []
+        for chart in charts:
+            messages.append(TextMessage(text=f"【{chart['label']}趨勢比較】"))
+            messages.append(ImageMessage(original_content_url=chart["url"], preview_image_url=chart["url"]))
+
+        # 回覆多張圖
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=messages[:5]  # LINE 最多一次只能回 5 則訊息
+            )
+        )
     else:
         bot_reply = f"你說：「{user_text}」"
         messaging_api.reply_message(
@@ -219,6 +234,102 @@ def handle_message(event):
             "bot_reply": bot_reply,
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
+def generate_full_analysis_report():
+    # 🔹 產生所有圖表（回傳一個 list）
+    chart_list = []
+
+    chart_list.append({
+        "label": "站立時間",
+        "url": generate_line_chart_by_key("standing_frames", "站立時間", "秒")
+    })
+
+    chart_list.append({
+        "label": "坐下時間",
+        "url": generate_line_chart_by_key("sitting_frames", "坐下時間", "秒")
+    })
+
+    chart_list.append({
+        "label": "推估步數",
+        "url": generate_line_chart_by_key("steps", "推估步數", "步")
+    })
+
+    chart_list.append({
+        "label": "移動量",
+        "url": generate_line_chart_by_key("total_movement", "移動量", "像素")
+    })
+
+    return chart_list
+
+def generate_line_chart_by_key(key="standing_frames", label="站立時間", unit="秒"):
+    # ✅ 抓最近 30 筆資料並排序
+    docs = db.collection("yolo_detections")\
+        .order_by("timestamp", direction=firestore.Query.DESCENDING)\
+        .limit(30)\
+        .stream()
+
+    records = list(d.to_dict() for d in docs)
+    records = list(reversed(records))  # 舊 → 新
+
+    old_data = records[:15]
+    new_data = records[15:]
+
+    # 🔹 特別處理步數欄位
+    if key == "steps":
+        old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
+        new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
+    else:
+        old_vals = [r.get(key, 0) for r in old_data]
+        new_vals = [r.get(key, 0) for r in new_data]
+        
+    '''now = datetime.now(timezone(timedelta(hours=8)))
+    cutoff_1 = now - timedelta(minutes=15)
+    cutoff_2 = now - timedelta(minutes=30)
+
+    # 🔹 取得兩段時間資料
+    docs_old = db.collection("yolo_detections")\
+        .where("timestamp", ">=", cutoff_2)\
+        .where("timestamp", "<", cutoff_1)\
+        .order_by("timestamp")\
+        .stream()
+
+    docs_new = db.collection("yolo_detections")\
+        .where("timestamp", ">=", cutoff_1)\
+        .order_by("timestamp")\
+        .stream()
+
+    old_data = [d.to_dict() for d in docs_old]
+    new_data = [d.to_dict() for d in docs_new]
+
+    # 🔹 特別處理「步數估算」欄位
+    if key == "steps":
+        old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
+        new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
+    else:
+        old_vals = [r.get(key, 0) for r in old_data]
+        new_vals = [r.get(key, 0) for r in new_data]'''
+
+    # 🔹 畫圖
+    font_path = "fonts/jf-openhuninn-1.1.ttf"
+    font_prop = font_manager.FontProperties(fname=font_path)
+    x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(x, old_vals, marker="o", label="上個15分鐘", color="blue")
+    plt.plot(x, new_vals, marker="o", label="最近15分鐘", color="red")
+    plt.xticks(x)
+    plt.xlabel("分鐘", fontproperties=font_prop)
+    plt.ylabel(f"{label}（{unit}）", fontproperties=font_prop)
+    plt.title(f"{label}趨勢比較", fontproperties=font_prop, fontsize=20)
+    plt.legend(prop=font_prop)
+    plt.grid(True)
+
+    # 儲存圖片並上傳
+    path = f"/tmp/line_chart_{key}_{int(time.time())}.png"
+    plt.savefig(path)
+    plt.close()
+
+    remote_name = os.path.basename(path)
+    return upload_to_firebase(path, remote_name)
     
 def estimate_steps_and_activity():
     records = get_recent_records(60)
