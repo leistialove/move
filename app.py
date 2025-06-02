@@ -272,8 +272,8 @@ def generate_posture_step_chart():
             new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
 
         x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
-        plt.plot(x, old_vals, marker='o', label="上個15筆", color='blue')
-        plt.plot(x, new_vals, marker='o', label="最近15筆", color='red')
+        plt.plot(x, old_vals, marker='o', label="今天15筆", color='blue')
+        plt.plot(x, new_vals, marker='o', label="昨天15筆", color='red')
         plt.title(f"{labels[i]}", fontproperties=font_prop, fontsize=14)
         plt.xlabel("筆數", fontproperties=font_prop)
         plt.ylabel(f"{units[i]}", fontproperties=font_prop)
@@ -340,7 +340,7 @@ def handle_postback(event):
         )
 
 from matplotlib import pyplot as plt
-from google.cloud.firestore import SERVER_TIMESTAMP
+#from google.cloud.firestore import SERVER_TIMESTAMP
 def get_recent_records(minutes):
     now = datetime.now(timezone(timedelta(hours=8)))  # 台灣時間
     cutoff = now - timedelta(minutes=minutes)
@@ -362,30 +362,25 @@ def summarize_records(records):
     return {
         "站立秒數": sum(r.get("standing_frames", 0) for r in records),
         "坐下秒數": sum(r.get("sitting_frames", 0) for r in records),
+        "躺下秒數": sum(r.get("lying_frames", 0) for r in records),
         "移動量": sum(r.get("total_movement", 0) for r in records)
     }
 
 from matplotlib import font_manager
 import time
 def generate_chart_image(summary, minutes):
-    font_path = "fonts/jf-openhuninn-1.1.ttf"  # 確保檔案在 fonts 資料夾
+    font_path = "fonts/jf-openhuninn-1.1.ttf"
     font_prop = font_manager.FontProperties(fname=font_path)
 
-    # === 模擬躺下比例：假設坐下的 30% 為躺下
-    lying_ratio = 0.3
-    total_sitting = summary["坐下秒數"]
-    estimated_lying = total_sitting * lying_ratio
-    estimated_sitting_only = total_sitting - estimated_lying
-
-    # === 整理資料（含三類）
+    # === 直接用三類欄位
     labels = ["站立", "坐下", "躺下"]
     values = [
         summary["站立秒數"],
-        estimated_sitting_only,
-        estimated_lying
+        summary["坐下秒數"],
+        summary["躺下秒數"]
     ]
-    
-        # 如果沒有資料
+
+    # 如果沒有資料
     if sum(values) == 0:
         labels = ["無資料", "無資料", "無資料"]
         values = [1, 1, 1]
@@ -398,26 +393,22 @@ def generate_chart_image(summary, minutes):
         startangle=90,
         textprops={
             'fontproperties': font_prop,
-            'fontsize': 22       # ⬅️ 圓餅圖中文字大小
+            'fontsize': 22
         }
     )
     plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=32)
-    # 🆕 顯示額外資訊（站、坐+躺、推估躺）
-    summary_text = f"站：{summary['站立秒數']:.0f} 秒 坐：{estimated_sitting_only:.0f} 秒 躺：{estimated_lying:.0f} 秒"
+    summary_text = f"站：{summary['站立秒數']:.0f} 秒 坐：{summary['坐下秒數']:.0f} 秒 躺：{summary['躺下秒數']:.0f} 秒"
 
-     # ✅ 調整下方註解文字大小
     plt.figtext(
         0.5,
         0.01,
         summary_text,
-        #f"總移動量：{summary['移動量']:.2f}",
         ha="center",
         fontproperties=font_prop,
         fontsize=18
     )
 
-    # ➤ 判斷是否「站立 < 1/3 總時間」，顯示鼓勵文字
-    total_time = summary['站立秒數'] + estimated_sitting_only + estimated_lying
+    total_time = summary['站立秒數'] + summary['坐下秒數'] + summary['躺下秒數']
     if summary['站立秒數'] < total_time / 3:
         encourage_text = "久坐久躺不健康，建議多起身活動一下喔！"
         plt.figtext(
@@ -433,6 +424,7 @@ def generate_chart_image(summary, minutes):
     plt.savefig(save_path)
     plt.close()
     return save_path
+
 
 def upload_to_firebase(local_path, remote_filename):
     bucket = storage.bucket()
