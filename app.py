@@ -30,6 +30,7 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     ReplyMessageRequest,
+    PushMessageRequest,
     TextMessage,
     FlexMessage,
     FlexContainer,
@@ -205,7 +206,13 @@ def handle_message(event):
         notify_msg = f"⚠️ 使用者主動聯絡照顧者！請儘速確認安全狀況！"
         caregiver_user_id = 'Uce4b2cb2114bfcb00ea533f77c3a3d6d'  # ← 記得換成實際照顧者 ID
         
-        # 使用正確的 TextMessage 格式來發送推播訊息
+        messaging_api.reply_message(
+            PushMessageRequest(
+                to=caregiver_user_id,
+                messages=[TextMessage(text=notify_msg)]
+            )
+        )
+        '''# 使用正確的 TextMessage 格式來發送推播訊息
         message = TextMessage(text=notify_msg)
         
         try:
@@ -218,17 +225,17 @@ def handle_message(event):
                 )
             )
         except Exception as e:
-            print(f"推送錯誤：{e}")
+            print(f"推送錯誤：{e}")'''
         '''messaging_api.push_message(
             caregiver_user_id,
             [TextMessage(text=notify_msg)]
-        )
+        )'''
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[TextMessage(text="已通知照顧者，請稍候。")]
             )
-        )'''
+        )
     else:
         bot_reply = f"你說：「{user_text}」"
         messaging_api.reply_message(
