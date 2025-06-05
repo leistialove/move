@@ -206,30 +206,23 @@ def handle_message(event):
         notify_msg = f"⚠️ 使用者主動聯絡照顧者！請儘速確認安全狀況！"
         caregiver_user_id = 'Uce4b2cb2114bfcb00ea533f77c3a3d6d'  # ← 記得換成實際照顧者 ID
         
-        messaging_api.reply_message(
+        '''messaging_api.reply_message(
             PushMessageRequest(
                 to=caregiver_user_id,
                 messages=[TextMessage(text=notify_msg)]
             )
-        )
-        '''# 使用正確的 TextMessage 格式來發送推播訊息
-        message = TextMessage(text=notify_msg)
-        
-        try:
-            messaging_api.push_message(caregiver_user_id, message)  # 直接傳遞 TextMessage 實例
-            # 回覆使用者
-            messaging_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text="已通知照顧者，請稍候。")]
-                )
-            )
-        except Exception as e:
-            print(f"推送錯誤：{e}")'''
-        '''messaging_api.push_message(
-            caregiver_user_id,
-            [TextMessage(text=notify_msg)]
         )'''
+        # 發送推播訊息給照顧者
+        push_message_request = PushMessageRequest(
+            to=caregiver_user_id,
+            messages=[TextMessage(text=notify_msg)]
+        )
+        try:
+            messaging_api.push_message(push_message_request)  # 使用正確的推播 API
+            print(f"已成功推送通知到照顧者: {caregiver_user_id}")
+        except Exception as e:
+            print(f"推播錯誤: {str(e)}")
+
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
