@@ -190,6 +190,7 @@ def handle_message(event):
             )
         )
     elif user_text == "分析報告":
+        bot_reply = user_text
         image_url = generate_posture_step_chart()
         messaging_api.reply_message(
             ReplyMessageRequest(
@@ -197,6 +198,20 @@ def handle_message(event):
                 messages=[
                     ImageMessage(original_content_url=image_url, preview_image_url=image_url)
                 ]
+            )
+        )
+    elif user_text == "聯絡照顧者":
+        bot_reply = user_text
+        notify_msg = f"⚠️ 使用者主動聯絡照顧者！請儘速確認安全狀況！"
+        caregiver_user_id = 'Uce4b2cb2114bfcb00ea533f77c3a3d6d'  # ← 記得換成實際照顧者 ID
+        messaging_api.push_message(
+            caregiver_user_id,
+            [TextMessage(text=notify_msg)]
+        )
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text="已通知照顧者，請稍候。")]
             )
         )
     else:
