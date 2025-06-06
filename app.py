@@ -291,8 +291,13 @@ def handle_message(event):
 def calculate_percentage_change(new_value, old_value):
     if old_value == 0:
         return 0 if new_value == 0 else 100  # 防止除以 0
-    return ((new_value - old_value) / old_value) * 100
-
+    change = ((new_value - old_value) / old_value) * 100
+    # 限制變化百分比範圍
+    if change > 200:  # 當變化超過 200%，設置為最大可接受範圍
+        return 200
+    elif change < -100:  # 當變化低於 -100%，設置為最小可接受範圍
+        return -100
+    return change
 
 def generate_posture_step_chart():
     # 🔹 取 Firestore 最近 30 筆資料
@@ -334,8 +339,8 @@ def generate_posture_step_chart():
 
         # 坐下時間變化
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.7 for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.7 for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) for r in old_data]
+            new_vals = [r.get("sitting_frames", 0) for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -343,8 +348,8 @@ def generate_posture_step_chart():
 
         # 躺下時間變化
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.3 for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.3 for r in new_data]
+            old_vals = [r.get("lying_frames", 0) for r in old_data]
+            new_vals = [r.get("lying_frames", 0) for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
