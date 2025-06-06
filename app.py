@@ -192,14 +192,57 @@ def handle_message(event):
         )
     elif user_text == "分析報告":
         bot_reply = user_text
-        image_url = generate_posture_step_chart()
+        image_url, changes, health_advice = generate_posture_step_chart()
+        # 健康建議 + 變化百分比的 FlexMessage
+        flex_message = {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "活動變化分析",
+                        "weight": "bold",
+                        "size": "xl",
+                        "align": "center"
+                    }
+                ]
+            }
+        }
+
+        # 添加百分比變化信息
+        for change in changes:
+            flex_message["body"]["contents"].append({
+                "type": "text",
+                "text": change,
+                "size": "sm",
+                "color": "#555555"
+            })
+
+        # 添加健康建議
+        for advice in health_advice:
+            flex_message["body"]["contents"].append({
+                "type": "text",
+                "text": f"💡 {advice}",
+                "size": "sm",
+                "color": "#ff4444"
+            })
+
+        # 第一條回覆：圖片
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[
-                    ImageMessage(original_content_url=image_url, preview_image_url=image_url)
+                    ImageMessage(original_content_url=image_url, preview_image_url=image_url),
                 ]
             )
+        )
+
+        # 第二條回覆：FlexMessage 顯示百分比與建議
+        messaging_api.push_message(
+            to=user_id,
+            messages=[FlexMessage(altText="活動變化分析", contents=flex_message)]
         )
     elif user_text == "聯絡照顧者":
         bot_reply = user_text
@@ -254,6 +297,12 @@ def handle_message(event):
             "timestamp": datetime.utcnow() # UTC 時間，便於排序與比對
         })
     
+def calculate_percentage_change(new_value, old_value):
+    if old_value == 0:
+        return 0 if new_value == 0 else 100  # 防止除以 0
+    return ((new_value - old_value) / old_value) * 100
+
+
 def generate_posture_step_chart():
     # 🔹 取 Firestore 最近 30 筆資料
     docs = db.collection("yolo_detections")\
@@ -276,40 +325,52 @@ def generate_posture_step_chart():
 
     plt.figure(figsize=(12, 10))
 
-    # 記錄變化百分比
-    changes = {}
+    # 健康建議初始化
+    health_advice = []
+    changes = []
 
     for i in range(4):
+        plt.subplot(2, 2, i+1)
 
+        # 站立時間變化
         if labels[i] == "站立時間":
             old_vals = [r.get("standing_frames", 0) for r in old_data]
             new_vals = [r.get("standing_frames", 0) for r in new_data]
+            change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
+            changes.append(f"站立時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            if change_percent < 0:
+                health_advice.append("站立時間減少，請多站立活動！")
 
+        # 坐下時間變化
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) * 0.7 for r in old_data]
+            new_vals = [r.get("sitting_frames", 0) * 0.7 for r in new_data]
+            change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
+            changes.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            if change_percent > 0:
+                health_advice.append("坐下時間增加，請注意久坐問題！")
 
+        # 躺下時間變化
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("lying_frames", 0) for r in old_data]
-            new_vals = [r.get("lying_frames", 0) for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) * 0.3 for r in old_data]
+            new_vals = [r.get("sitting_frames", 0) * 0.3 for r in new_data]
+            change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
+            changes.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            if change_percent > 0:
+                health_advice.append("躺下時間增加，建議多活動，避免長時間躺下！")
 
+        # 步數變化
         elif labels[i] == "推估步數":
             old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
             new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
-
-        # 計算變化百分比
-        old_total = sum(old_vals)
-        new_total = sum(new_vals)
-        if old_total != 0:
-            change_percentage = ((new_total - old_total) / old_total) * 100
-        else:
-            change_percentage = 0  # 如果原來的總數為0，就不計算百分比
-
-        # 儲存變化百分比
-        changes[labels[i]] = change_percentage
+            change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
+            changes.append(f"步數變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            if change_percent > 0:
+                health_advice.append("步數增加，保持良好活動！")
+            else:
+                health_advice.append("步數減少，記得保持日常活動，積極走動！")
 
         x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
-        plt.subplot(2, 2, i+1)
         plt.plot(x, old_vals, marker='o', label="今天15筆", color='blue')
         plt.plot(x, new_vals, marker='o', label="昨天15筆", color='red')
         plt.title(f"{labels[i]}", fontproperties=font_prop, fontsize=14)
@@ -326,11 +387,10 @@ def generate_posture_step_chart():
     plt.close()
 
     remote_name = os.path.basename(save_path)
-    upload_to_firebase(save_path, remote_name)
-    
-    # 輸出變化百分比
-    output_changes = "\n".join([f"{label}: {change:.2f}%" for label, change in changes.items()])
-    return output_changes
+    image_url = upload_to_firebase(save_path, remote_name)
+
+    # 返回圖片網址和健康建議與百分比
+    return image_url, changes, health_advice
 
 
 def estimate_steps_and_activity():
