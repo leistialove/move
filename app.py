@@ -241,8 +241,10 @@ def handle_message(event):
 
         # 第二條回覆：FlexMessage 顯示百分比與建議
         messaging_api.push_message(
-            to=user_id,
-            messages=[FlexMessage(altText="活動變化分析", contents=flex_message)]
+            PushMessageRequest(
+                to=user_id,
+                messages=[FlexMessage(altText="活動變化分析", contents=flex_message)]
+            )
         )
     elif user_text == "聯絡照顧者":
         bot_reply = user_text
