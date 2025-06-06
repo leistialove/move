@@ -206,12 +206,6 @@ def handle_message(event):
         notify_msg = f"⚠️ 使用者主動聯絡照顧者！請儘速確認安全狀況！"
         caregiver_user_id = 'Uce4b2cb2114bfcb00ea533f77c3a3d6d'  # ← 記得換成實際照顧者 ID
         
-        '''messaging_api.reply_message(
-            PushMessageRequest(
-                to=caregiver_user_id,
-                messages=[TextMessage(text=notify_msg)]
-            )
-        )'''
         # 發送推播訊息給照顧者
         push_message_request = PushMessageRequest(
             to=caregiver_user_id,
@@ -282,26 +276,40 @@ def generate_posture_step_chart():
 
     plt.figure(figsize=(12, 10))
 
+    # 記錄變化百分比
+    changes = {}
+
     for i in range(4):
-        plt.subplot(2, 2, i+1)
 
         if labels[i] == "站立時間":
             old_vals = [r.get("standing_frames", 0) for r in old_data]
             new_vals = [r.get("standing_frames", 0) for r in new_data]
 
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.7 for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.7 for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) for r in old_data]
+            new_vals = [r.get("sitting_frames", 0) for r in new_data]
 
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.3 for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.3 for r in new_data]
+            old_vals = [r.get("lying_frames", 0) for r in old_data]
+            new_vals = [r.get("lying_frames", 0) for r in new_data]
 
         elif labels[i] == "推估步數":
             old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
             new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
 
+        # 計算變化百分比
+        old_total = sum(old_vals)
+        new_total = sum(new_vals)
+        if old_total != 0:
+            change_percentage = ((new_total - old_total) / old_total) * 100
+        else:
+            change_percentage = 0  # 如果原來的總數為0，就不計算百分比
+
+        # 儲存變化百分比
+        changes[labels[i]] = change_percentage
+
         x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
+        plt.subplot(2, 2, i+1)
         plt.plot(x, old_vals, marker='o', label="今天15筆", color='blue')
         plt.plot(x, new_vals, marker='o', label="昨天15筆", color='red')
         plt.title(f"{labels[i]}", fontproperties=font_prop, fontsize=14)
@@ -318,7 +326,11 @@ def generate_posture_step_chart():
     plt.close()
 
     remote_name = os.path.basename(save_path)
-    return upload_to_firebase(save_path, remote_name)
+    upload_to_firebase(save_path, remote_name)
+    
+    # 輸出變化百分比
+    output_changes = "\n".join([f"{label}: {change:.2f}%" for label, change in changes.items()])
+    return output_changes
 
 
 def estimate_steps_and_activity():
