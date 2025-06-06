@@ -192,58 +192,47 @@ def handle_message(event):
         )
     elif user_text == "分析報告":
         bot_reply = user_text
-        image_url, changes, health_advice = generate_posture_step_chart()
-        # 健康建議 + 變化百分比的 FlexMessage
-        flex_message = {
+        image_url, change_list, health_advice = generate_posture_step_chart()
+        percent_flex_json = {
             "type": "bubble",
             "body": {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
+                    { "type": "text", "text": "活動變化分析", "weight": "bold", "size": "xl", "align": "center" },
+                    { "type": "text", "text": change_list[0], "size": "md", "margin": "md", "color": "#222222" }, # 站立
+                    { "type": "text", "text": change_list[1], "size": "md", "margin": "md", "color": "#222222" }, # 坐下
+                    { "type": "text", "text": change_list[2], "size": "md", "margin": "md", "color": "#222222" }, # 躺下
+                    { "type": "text", "text": change_list[3], "size": "md", "margin": "md", "color": "#222222" }, # 步數
+                    { "type": "separator", "margin": "lg" }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "sm",
+                "contents": [
                     {
                         "type": "text",
-                        "text": "活動變化分析",
-                        "weight": "bold",
-                        "size": "xl",
-                        "align": "center"
+                        "text": f"💡 {' '.join(health_advice)}",
+                        "size": "md",
+                        "color": "#ff4444",
+                        "wrap": True
                     }
                 ]
             }
         }
-
-        # 添加百分比變化信息
-        for change in changes:
-            flex_message["body"]["contents"].append({
-                "type": "text",
-                "text": change,
-                "size": "sm",
-                "color": "#555555"
-            })
-
-        # 添加健康建議
-        for advice in health_advice:
-            flex_message["body"]["contents"].append({
-                "type": "text",
-                "text": f"💡 {advice}",
-                "size": "sm",
-                "color": "#ff4444"
-            })
-
         # 第一條回覆：圖片
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[
                     ImageMessage(original_content_url=image_url, preview_image_url=image_url),
+                    FlexMessage(
+                        altText="分析報告-百分比", 
+                        contents=FlexContainer.from_json(json.dumps(percent_flex_json))
+                    )
                 ]
-            )
-        )
-
-        # 第二條回覆：FlexMessage 顯示百分比與建議
-        messaging_api.push_message(
-            PushMessageRequest(
-                to=user_id,
-                messages=[FlexMessage(altText="活動變化分析", contents=flex_message)]
             )
         )
     elif user_text == "聯絡照顧者":
@@ -329,7 +318,7 @@ def generate_posture_step_chart():
 
     # 健康建議初始化
     health_advice = []
-    changes = []
+    change_list = []
 
     for i in range(4):
         plt.subplot(2, 2, i+1)
@@ -339,7 +328,7 @@ def generate_posture_step_chart():
             old_vals = [r.get("standing_frames", 0) for r in old_data]
             new_vals = [r.get("standing_frames", 0) for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
-            changes.append(f"站立時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            change_list.append(f"站立時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent < 0:
                 health_advice.append("站立時間減少，請多站立活動！")
 
@@ -348,7 +337,7 @@ def generate_posture_step_chart():
             old_vals = [r.get("sitting_frames", 0) * 0.7 for r in old_data]
             new_vals = [r.get("sitting_frames", 0) * 0.7 for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
-            changes.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            change_list.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
                 health_advice.append("坐下時間增加，請注意久坐問題！")
 
@@ -357,7 +346,7 @@ def generate_posture_step_chart():
             old_vals = [r.get("sitting_frames", 0) * 0.3 for r in old_data]
             new_vals = [r.get("sitting_frames", 0) * 0.3 for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
-            changes.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            change_list.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
                 health_advice.append("躺下時間增加，建議多活動，避免長時間躺下！")
 
@@ -366,7 +355,7 @@ def generate_posture_step_chart():
             old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
             new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
-            changes.append(f"步數變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            change_list.append(f"步數變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
                 health_advice.append("步數增加，保持良好活動！")
             else:
@@ -392,7 +381,7 @@ def generate_posture_step_chart():
     image_url = upload_to_firebase(save_path, remote_name)
 
     # 返回圖片網址和健康建議與百分比
-    return image_url, changes, health_advice
+    return image_url, change_list, health_advice
 
 
 def estimate_steps_and_activity():
