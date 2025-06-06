@@ -214,7 +214,7 @@ def handle_message(event):
                 "contents": [
                     {
                         "type": "text",
-                        "text": f"💡 {' '.join(health_advice)}",
+                        "text": "\n".join(health_advice),  # 每條建議換行顯示
                         "size": "md",
                         "color": "#ff4444",
                         "wrap": True
