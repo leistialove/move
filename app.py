@@ -222,7 +222,6 @@ def handle_message(event):
                 ]
             }
         }
-        # 第一條回覆：圖片
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
@@ -289,15 +288,17 @@ def handle_message(event):
         })
     
 def calculate_percentage_change(new_value, old_value):
+    # 防止除以0的情況
     if old_value == 0:
-        return 0 if new_value == 0 else 100  # 防止除以 0
+        return 0 if new_value == 0 else 100  # 如果昨天是0，今天是非零的話，視為100%的變化
     change = ((new_value - old_value) / old_value) * 100
-    # 限制變化百分比範圍
-    if change > 200:  # 當變化超過 200%，設置為最大可接受範圍
+    # 避免極端值
+    if change > 200:
         return 200
-    elif change < -100:  # 當變化低於 -100%，設置為最小可接受範圍
+    elif change < -100:
         return -100
     return change
+
 
 def generate_posture_step_chart():
     # 🔹 取 Firestore 最近 30 筆資料
@@ -309,8 +310,9 @@ def generate_posture_step_chart():
     records = list(d.to_dict() for d in docs)
     records = list(reversed(records))  # 舊→新
 
-    old_data = records[:15]
-    new_data = records[15:]
+    # 分割資料為今天和昨天
+    yesterday_data = records[:15]
+    today_data = records[15:]
 
     # 🔹 四個指標
     labels = ["站立時間", "坐下時間", "躺下時間", "推估步數"]
@@ -330,8 +332,8 @@ def generate_posture_step_chart():
 
         # 站立時間變化
         if labels[i] == "站立時間":
-            old_vals = [r.get("standing_frames", 0) for r in old_data]
-            new_vals = [r.get("standing_frames", 0) for r in new_data]
+            old_vals = [r.get("standing_frames", 0) for r in yesterday_data]
+            new_vals = [r.get("standing_frames", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"站立時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent < 0:
@@ -339,8 +341,8 @@ def generate_posture_step_chart():
 
         # 坐下時間變化
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) for r in old_data]
-            new_vals = [r.get("sitting_frames", 0) for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) * 0.7 for r in yesterday_data]
+            new_vals = [r.get("sitting_frames", 0) * 0.7 for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -348,8 +350,8 @@ def generate_posture_step_chart():
 
         # 躺下時間變化
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("lying_frames", 0) for r in old_data]
-            new_vals = [r.get("lying_frames", 0) for r in new_data]
+            old_vals = [r.get("sitting_frames", 0) * 0.3 for r in yesterday_data]
+            new_vals = [r.get("sitting_frames", 0) * 0.3 for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -357,8 +359,8 @@ def generate_posture_step_chart():
 
         # 步數變化
         elif labels[i] == "推估步數":
-            old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in old_data]
-            new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in new_data]
+            old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in yesterday_data]
+            new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"步數變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
