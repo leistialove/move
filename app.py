@@ -341,8 +341,8 @@ def generate_posture_step_chart():
 
         # 坐下時間變化
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.7 for r in yesterday_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.7 for r in today_data]
+            old_vals = [r.get("sitting_frames", 0) for r in yesterday_data]
+            new_vals = [r.get("sitting_frames", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -350,8 +350,8 @@ def generate_posture_step_chart():
 
         # 躺下時間變化
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("sitting_frames", 0) * 0.3 for r in yesterday_data]
-            new_vals = [r.get("sitting_frames", 0) * 0.3 for r in today_data]
+            old_vals = [r.get("lying_frames", 0) for r in yesterday_data]
+            new_vals = [r.get("lying_frames", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -369,8 +369,8 @@ def generate_posture_step_chart():
                 health_advice.append("步數減少，記得保持日常活動，積極走動！")
 
         x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
-        plt.plot(x, old_vals, marker='o', label="今天15筆", color='blue')
-        plt.plot(x, new_vals, marker='o', label="昨天15筆", color='red')
+        plt.plot(x, old_vals, marker='o', label="昨天15筆", color='red')  # 這裡應該是昨天的資料為紅色
+        plt.plot(x, new_vals, marker='o', label="今天15筆", color='blue')  # 今天的資料為藍色
         plt.title(f"{labels[i]}", fontproperties=font_prop, fontsize=14)
         plt.xlabel("筆數", fontproperties=font_prop)
         plt.ylabel(f"{units[i]}", fontproperties=font_prop)
