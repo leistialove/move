@@ -167,27 +167,55 @@ def handle_message(event):
         )
     elif user_text == "活動程度":
         bot_reply = user_text
-        steps, level, message = estimate_steps_and_activity()
-        line_flex_json = {
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                    {"type": "text", "text": f"一小時內活動分析", "weight": "bold", "size": "xl", "align": "center"},
-                    {"type": "text", "text": f"推估步數：{steps} 步", "size": "lg", "margin": "md"},
-                    {"type": "text", "text": f"活動量評估：{level}", "size": "lg", "margin": "md", "color": "#555555"},
-                    {"type": "text", "text": message, "wrap": True, "margin": "md", "color": "#ff4444"}
-                ]
+        activity_menu_flex = {
+    "type": "bubble",
+    "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+            {
+                "type": "text",
+                "text": "活動管理選單",
+                "weight": "bold",
+                "size": "xl",
+                "align": "center"
+            },
+            {
+                "type": "separator",
+                "margin": "md"
+            },
+            {
+                "type": "button",
+                "action": {
+                    "type": "postback",
+                    "label": "設定今日目標",
+                    "data": "set_goal"
+                },
+                "style": "primary",
+                "margin": "md"
+            },
+            {
+                "type": "button",
+                "action": {
+                    "type": "postback",
+                    "label": "查詢今日進度",
+                    "data": "check_progress"
+                },
+                "style": "secondary",
+                "margin": "md"
             }
-        }
+        ]
+    }
+}
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[FlexMessage(
-                    altText="一小時活動量分析", 
-                    contents=FlexContainer.from_json(json.dumps(line_flex_json))
-                )]
+                messages=[
+                    FlexMessage(
+                        altText="活動管理選單",
+                        contents=FlexContainer.from_json(json.dumps(activity_menu_flex))
+                    )
+                ]
             )
         )
     elif user_text == "分析報告":
@@ -391,27 +419,6 @@ def generate_posture_step_chart():
     return image_url, change_list, health_advice
 
 
-def estimate_steps_and_activity():
-    records = get_recent_records(60)
-    total_pixel = sum(r.get("total_movement", 0) for r in records)
-    
-    PIXELS_PER_METER = 100       # 建議依實際相機視角微調
-    METERS_PER_STEP = 0.6
-
-    total_meters = total_pixel / PIXELS_PER_METER
-    estimated_steps = int(total_meters / METERS_PER_STEP)
-
-    if estimated_steps < 200:
-        level = "低活動量"
-        message = "一小時內活動量偏低，建議多走動一下喔～"
-    elif estimated_steps < 600:
-        level = "中等活動量"
-        message = "活動量不錯，再多動一點會更健康！"
-    else:
-        level = "高活動量"
-        message = "很棒！你今天活動量很充足，繼續保持喔！" 
-
-    return estimated_steps, level, message
 @handler.add(PostbackEvent)
 def handle_postback(event):
     postback_data = event.postback.data
