@@ -617,7 +617,7 @@ def check_and_push_goal():
         # 推播
         msg = f"🎉 恭喜你今日達成活動目標（{int(total)} 秒）！繼續保持！"
         messaging_api.push_message(PushMessageRequest(
-            to="你的LINE_USER_ID",  # 寫你的UserId
+            to='Uce4b2cb2114bfcb00ea533f77c3a3d6d',  # 寫你的UserId
             messages=[TextMessage(text=msg)]
         ))
         db.collection("profile").document("push_log").set({date_key: True}, merge=True)
