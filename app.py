@@ -596,6 +596,32 @@ def get_goal_progress():
     left_sec = max(target - total, 0)
     return total, target, percent, left_sec
 
+def check_and_push_goal():
+    # 取得目標
+    target_doc = db.collection("profile").document("target").get()
+    target = target_doc.to_dict().get("moving_time_target", 1800) if target_doc.exists else 1800
+    today = datetime.now().date()
+    start = datetime(today.year, today.month, today.day, 0, 0, 0)
+    end   = start + timedelta(days=1)
+    docs = db.collection("yolo_detections")\
+        .where("timestamp", ">=", start)\
+        .where("timestamp", "<", end)\
+        .stream()
+    total = sum(d.to_dict().get("moving_time", 0) for d in docs)
+
+    # 判斷今日是否已推播
+    push_log_doc = db.collection("profile").document("push_log").get()
+    log = push_log_doc.to_dict() or {}
+    date_key = datetime.now().strftime("%Y%m%d")
+    if total >= target and not log.get(date_key, False):
+        # 推播
+        msg = f"🎉 恭喜你今日達成活動目標（{int(total)} 秒）！繼續保持！"
+        messaging_api.push_message(PushMessageRequest(
+            to="你的LINE_USER_ID",  # 寫你的UserId
+            messages=[TextMessage(text=msg)]
+        ))
+        db.collection("profile").document("push_log").set({date_key: True}, merge=True)
+
 def upload_to_firebase(local_path, remote_filename):
     bucket = storage.bucket()
     blob = bucket.blob(f"charts/{remote_filename}")
