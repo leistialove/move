@@ -22,6 +22,8 @@ db = firestore.client()
 # ===== Flask App =====
 app = Flask(__name__)
 
+user_set_goal_state = {"waiting": False}
+
 # ===== LINE Bot v3 SDK 設定 =====
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
@@ -100,6 +102,27 @@ def callback():
 def handle_message(event):
     user_id   = event.source.user_id
     user_text = event.message.text
+    
+    global user_set_goal_state
+    if user_set_goal_state.get("waiting", False):
+        try:
+            target_sec = int(user_text.strip())
+            db.collection("profile").document("target").set({"moving_time_target": target_sec})
+            user_set_goal_state["waiting"] = False
+            messaging_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=f"今日目標已設定為 {target_sec} 秒！")]
+                )
+            )
+        except:
+            messaging_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text="請輸入正確的數字，例如：1800")]
+                )
+            )
+        return
     
     # 回覆 LINE 使用者
     if user_text == "坐臥時長":
@@ -422,6 +445,7 @@ def generate_posture_step_chart():
 @handler.add(PostbackEvent)
 def handle_postback(event):
     postback_data = event.postback.data
+    reply_token = event.reply_token
     user_id = event.source.user_id
     
     duration_map = {
@@ -445,6 +469,30 @@ def handle_postback(event):
                 ]
             )
         )
+        return
+    
+    # ====== 2. 活動管理選單功能 ======
+    if postback_data == "set_goal":
+        global user_set_goal_state
+        user_set_goal_state["waiting"] = True
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=reply_token,
+                messages=[TextMessage(text="請輸入今日目標秒數（例如：1800）")]
+            )
+        )
+        return
+
+    if postback_data == "check_progress":
+        total, target, percent, left_sec = get_goal_progress()
+        msg = f"已累積活動 {int(total)} 秒 / 目標 {target} 秒\n進度 {percent:.1f}%\n還差 {int(left_sec)} 秒"
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=reply_token,
+                messages=[TextMessage(text=msg)]
+            )
+        )
+        return
 
 from matplotlib import pyplot as plt
 #from google.cloud.firestore import SERVER_TIMESTAMP
@@ -473,6 +521,7 @@ def summarize_records(records):
         "移動量": sum(r.get("total_movement", 0) for r in records)
     }
 
+#坐臥時長===============pie圖
 from matplotlib import font_manager
 import time
 def generate_chart_image(summary, minutes):
@@ -531,7 +580,21 @@ def generate_chart_image(summary, minutes):
     plt.savefig(save_path)
     plt.close()
     return save_path
-
+#活動程度===============================
+def get_goal_progress():
+    target_doc = db.collection("profile").document("target").get()
+    target = target_doc.to_dict().get("moving_time_target", 1800) if target_doc.exists else 1800
+    today = datetime.now().date()
+    start = datetime(today.year, today.month, today.day, 0, 0, 0)
+    end   = start + timedelta(days=1)
+    docs = db.collection("yolo_detections")\
+        .where("timestamp", ">=", start)\
+        .where("timestamp", "<", end)\
+        .stream()
+    total = sum(d.to_dict().get("moving_time", 0) for d in docs)
+    percent = min(total / target * 100, 100)
+    left_sec = max(target - total, 0)
+    return total, target, percent, left_sec
 
 def upload_to_firebase(local_path, remote_filename):
     bucket = storage.bucket()
