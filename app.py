@@ -366,8 +366,8 @@ def generate_posture_step_chart():
     today_data = records[15:]
 
     # 🔹 四個指標
-    labels = ["站立時間", "坐下時間", "躺下時間", "推估步數"]
-    units = ["秒", "秒", "秒", "步"]
+    labels = ["站立時間", "坐下時間", "躺下時間", "移動時間"]
+    units = ["秒", "秒", "秒", "秒"]
 
     font_path = "fonts/jf-openhuninn-1.1.ttf"
     font_prop = font_manager.FontProperties(fname=font_path)
@@ -383,8 +383,8 @@ def generate_posture_step_chart():
 
         # 站立時間變化
         if labels[i] == "站立時間":
-            old_vals = [r.get("standing_frames", 0) for r in yesterday_data]
-            new_vals = [r.get("standing_frames", 0) for r in today_data]
+            old_vals = [r.get("standing_time", 0) for r in yesterday_data]
+            new_vals = [r.get("standing_time", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"站立時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent < 0:
@@ -392,8 +392,8 @@ def generate_posture_step_chart():
 
         # 坐下時間變化
         elif labels[i] == "坐下時間":
-            old_vals = [r.get("sitting_frames", 0) for r in yesterday_data]
-            new_vals = [r.get("sitting_frames", 0) for r in today_data]
+            old_vals = [r.get("sitting_time", 0) for r in yesterday_data]
+            new_vals = [r.get("sitting_time", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"坐下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
@@ -401,23 +401,23 @@ def generate_posture_step_chart():
 
         # 躺下時間變化
         elif labels[i] == "躺下時間":
-            old_vals = [r.get("lying_frames", 0) for r in yesterday_data]
-            new_vals = [r.get("lying_frames", 0) for r in today_data]
+            old_vals = [r.get("lying_time", 0) for r in yesterday_data]
+            new_vals = [r.get("lying_time", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
             change_list.append(f"躺下時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
                 health_advice.append("躺下時間增加，建議多活動，避免長時間躺下！")
 
-        # 步數變化
-        elif labels[i] == "推估步數":
-            old_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in yesterday_data]
-            new_vals = [r.get("total_movement", 0) / 100 / 0.6 for r in today_data]
+        # 移動時間變化
+        elif labels[i] == "移動時間":
+            old_vals = [r.get("moving_time", 0) for r in yesterday_data]
+            new_vals = [r.get("moving_time", 0) for r in today_data]
             change_percent = calculate_percentage_change(sum(new_vals), sum(old_vals))
-            change_list.append(f"步數變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
+            change_list.append(f"移動時間變化：{'增加' if change_percent > 0 else '減少'} {abs(change_percent):.1f}%")
             if change_percent > 0:
-                health_advice.append("步數增加，保持良好活動！")
+                health_advice.append("活動時間增加，保持良好活動！")
             else:
-                health_advice.append("步數減少，記得保持日常活動，積極走動！")
+                health_advice.append("活動時間減少，注意活動！")
 
         x = list(range(1, max(len(old_vals), len(new_vals)) + 1))
         plt.plot(x, old_vals, marker='o', label="昨天15筆", color='red')  # 這裡應該是昨天的資料為紅色
@@ -515,10 +515,10 @@ def get_recent_records(minutes):
 
 def summarize_records(records):
     return {
-        "站立秒數": sum(r.get("standing_frames", 0) for r in records),
-        "坐下秒數": sum(r.get("sitting_frames", 0) for r in records),
-        "躺下秒數": sum(r.get("lying_frames", 0) for r in records),
-        "移動量": sum(r.get("total_movement", 0) for r in records)
+        "站立秒數": sum(r.get("standing_time", 0) for r in records),
+        "坐下秒數": sum(r.get("sitting_time", 0) for r in records),
+        "躺下秒數": sum(r.get("lying_time", 0) for r in records),
+        "移動秒數": sum(r.get("moving_time", 0) for r in records)
     }
 
 #坐臥時長===============pie圖
