@@ -582,10 +582,11 @@ def generate_chart_image(summary, minutes):
     return save_path
 #活動程度===============================
 def get_goal_progress():
+    tz = timezone(timedelta(hours=8))  # 台灣時區
     target_doc = db.collection("profile").document("target").get()
     target = target_doc.to_dict().get("moving_time_target", 1800) if target_doc.exists else 1800
-    today = datetime.now().date()
-    start = datetime(today.year, today.month, today.day, 0, 0, 0)
+    today = datetime.now(tz).date()
+    start = datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=tz)
     end   = start + timedelta(days=1)
     docs = db.collection("yolo_detections")\
         .where("timestamp", ">=", start)\
@@ -597,12 +598,12 @@ def get_goal_progress():
     return total, target, percent, left_sec
 
 def check_and_push_goal():
-    # 取得目標
+    tz = timezone(timedelta(hours=8))  # 台灣時區
     target_doc = db.collection("profile").document("target").get()
     target = target_doc.to_dict().get("moving_time_target", 1800) if target_doc.exists else 1800
-    today = datetime.now().date()
-    start = datetime(today.year, today.month, today.day, 0, 0, 0)
-    end   = start + timedelta(days=1)
+    today = datetime.now(tz).date()
+    start = datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=tz)
+    end = start + timedelta(days=1)
     docs = db.collection("yolo_detections")\
         .where("timestamp", ">=", start)\
         .where("timestamp", "<", end)\
@@ -612,12 +613,11 @@ def check_and_push_goal():
     # 判斷今日是否已推播
     push_log_doc = db.collection("profile").document("push_log").get()
     log = push_log_doc.to_dict() or {}
-    date_key = datetime.now().strftime("%Y%m%d")
+    date_key = datetime.now(tz).strftime("%Y%m%d")
     if total >= target and not log.get(date_key, False):
-        # 推播
         msg = f"🎉 恭喜你今日達成活動目標（{int(total)} 秒）！繼續保持！"
         messaging_api.push_message(PushMessageRequest(
-            to='Uce4b2cb2114bfcb00ea533f77c3a3d6d',  # 寫你的UserId
+            to='Uce4b2cb2114bfcb00ea533f77c3a3d6d',  # 你的UserId
             messages=[TextMessage(text=msg)]
         ))
         db.collection("profile").document("push_log").set({date_key: True}, merge=True)
