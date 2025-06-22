@@ -2,32 +2,62 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>查詢活動紀錄</title>
+  <title>活動紀錄比對</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>查詢活動紀錄（依日期）</h1>
-  <form id="query-form">
-    <label for="date1">選擇日期一：</label>
-    <input type="date" id="date1" name="date1" required>
-    <br>
-    <label for="date2">選擇日期二（可選）：</label>
-    <input type="date" id="date2" name="date2">
-    <br>
-    <button type="submit">查詢</button>
+  <h2>選擇兩個日期比對活動量</h2>
+  <form id="compare-form">
+    <label>日期1：<input type="date" id="date1" required></label>
+    <label>日期2：<input type="date" id="date2" required></label>
+    <button type="submit">比對</button>
   </form>
-  <div id="result"></div>
+  <div>
+    <canvas id="compareChart" width="600" height="400"></canvas>
+  </div>
+  <div id="compare-data"></div>
 
   <script>
-    document.getElementById('query-form').onsubmit = async function(e){
+    let chartInstance = null;
+    document.getElementById('compare-form').onsubmit = async function(e){
       e.preventDefault();
       const d1 = document.getElementById('date1').value;
       const d2 = document.getElementById('date2').value;
-      let url = `/api/query_records?date1=${d1}`;
-      if(d2) url += `&date2=${d2}`;
-      const res = await fetch(url);
+      const res = await fetch(`/api/compare_chart?date1=${d1}&date2=${d2}`);
       const data = await res.json();
-      document.getElementById('result').innerText = JSON.stringify(data, null, 2);
-      // 這裡可以用JS畫圖表
+      if(data.error){
+        document.getElementById('compare-data').innerText = data.error;
+        return;
+      }
+      const labels = ["站立", "坐下", "躺下", "移動"];
+      const v1 = [data.sum1["站立"], data.sum1["坐下"], data.sum1["躺下"], data.sum1["移動"]];
+      const v2 = [data.sum2["站立"], data.sum2["坐下"], data.sum2["躺下"], data.sum2["移動"]];
+
+      const ctx = document.getElementById('compareChart').getContext('2d');
+      if(chartInstance) chartInstance.destroy(); // 清掉舊的
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: d1, data: v1, backgroundColor: 'rgba(75,192,192,0.6)' },
+            { label: d2, data: v2, backgroundColor: 'rgba(255,99,132,0.6)' }
+          ]
+        },
+        options: {
+          responsive: false,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // 也可印出數據
+      document.getElementById('compare-data').innerHTML =
+        `<pre>${d1}：${JSON.stringify(data.sum1, null, 2)}\n${d2}：${JSON.stringify(data.sum2, null, 2)}</pre>`;
     }
   </script>
 </body>
