@@ -592,14 +592,40 @@ def get_goal_progress():
     today = datetime.now(tz).date()
     start = datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=tz)
     end   = start + timedelta(days=1)
+
+    # ====== 寫 Firestore debug log ======
+    db.collection("debug_log").add({
+        "when": datetime.now(tz),
+        "note": "查詢區間",
+        "start": start,
+        "end": end,
+    })
+
     docs = db.collection_group("records")\
         .where("timestamp", ">=", start)\
         .where("timestamp", "<", end)\
         .stream()
-    total = sum(d.to_dict().get("moving_time", 0) for d in docs)
+    total = 0
+    log_list = []
+    for d in docs:
+        rec = d.to_dict()
+        t = rec.get("timestamp")
+        v = rec.get("moving_time", 0)
+        total += v
+        log_list.append({"timestamp": t, "moving_time": v})
+
+    # ====== 再把實際抓到的資料寫進 debug_log ======
+    db.collection("debug_log").add({
+        "when": datetime.now(tz),
+        "note": "抓到的資料",
+        "data": log_list,
+        "sum": total,
+    })
+
     percent = min(total / target * 100, 100)
     left_sec = max(target - total, 0)
     return total, target, percent, left_sec
+
 
 def check_and_push_goal():
     tz = timezone(timedelta(hours=8))  # 台灣時區
