@@ -47,6 +47,7 @@
         {% for col in collections %}
         <div class="card">
             <a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a>
+            <a href="/firebase/query_date">日期查詢</a>
         </div>
         {% endfor %}
     </div>
