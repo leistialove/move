@@ -8,11 +8,11 @@
         body {
             font-family: "Noto Sans TC", "微軟正黑體", Arial, sans-serif;
             background-color: #f4f6f8;
-            padding: 20px;
+            padding: 24px;
         }
         h1 {
             color: #2c3e50;
-            margin-bottom: 22px;
+            margin-bottom: 26px;
             font-size: 1.25rem;
             text-align: center;
             letter-spacing: 1px;
@@ -21,86 +21,84 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 18px;
-            margin-bottom: 20px;
+            gap: 22px;
+            margin-bottom: 22px;
         }
         .card {
             background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 20px 24px 16px 24px;
-            min-width: 148px;
-            transition: transform 0.18s;
+            border-radius: 16px;
+            box-shadow: 0 2px 14px rgba(80,180,230,0.11);
+            padding: 26px 20px 18px 20px;
+            min-width: 160px;
             text-align: center;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-        }
-        .card a {
-            text-decoration: none;
-            color: #2d89ef;
-            font-weight: bold;
-            font-size: 1.12rem;
-            letter-spacing: 1px;
-        }
-        .card-btn-row {
-            margin-top: 12px;
+            transition: transform 0.18s;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            align-items: center;
+            gap: 9px;
         }
-        .func-btn {
-            display: inline-block;
-            background: linear-gradient(90deg,#e0c3fc,#8ec5fc 100%);
-            color: #222;
-            border-radius: 8px;
-            padding: 5px 14px;
-            text-decoration: none;
-            font-size: 0.96rem;
-            margin-top: 2px;
-            font-weight: 500;
-            transition: background 0.13s;
+        .card:hover {
+            transform: translateY(-5px) scale(1.015);
         }
-        .func-btn:hover {
-            background: linear-gradient(90deg,#a1c4fd 0%, #c2e9fb 100%);
-            color: #135;
-        }
-        .activity-card {
-            background: linear-gradient(100deg,#fbc2eb 0%, #a6c1ee 100%);
-            color: #222;
-            border-radius: 18px;
-            box-shadow: 0 2px 14px rgba(244,143,177,0.07);
-            padding: 18px 26px 16px 26px;
-            min-width: 148px;
+        .card-title {
+            color: #2979ff;
             font-weight: bold;
-            font-size: 1.09rem;
-            text-align: center;
-            transition: transform 0.16s;
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
-        .activity-card a {
-            display: block;
-            margin-top: 7px;
-            font-size: 1.02rem;
-            background: #fff7;
-            color: #2f80ed;
-            border-radius: 7px;
-            padding: 5px 12px;
+        .card-btn {
+            background: linear-gradient(90deg,#a8edea,#fed6e3);
+            color: #234;
+            font-size: 1.04rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 0;
+            min-width: 108px;
+            width: 100%;
+            cursor: pointer;
             text-decoration: none;
+            box-shadow: 0 1px 4px #eee;
             transition: background 0.13s, color 0.13s;
-            font-weight: 500;
         }
-        .activity-card a:hover {
-            background: #fff;
+        .card-btn:hover {
+            background: linear-gradient(90deg,#fed6e3,#a8edea);
             color: #b03a5b;
         }
-        @media (max-width: 650px) {
+        .activity-card {
+            background: linear-gradient(120deg,#fbc2eb 0%, #a6c1ee 100%);
+            color: #233;
+            border-radius: 20px;
+            box-shadow: 0 2px 14px rgba(244,143,177,0.08);
+            padding: 24px 16px 17px 16px;
+            min-width: 170px;
+            font-size: 1.08rem;
+            font-weight: bold;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 9px;
+        }
+        .activity-card .card-btn {
+            background: #fff;
+            color: #397bce;
+            font-size: 1.01rem;
+            font-weight: 600;
+        }
+        .activity-card .card-btn:hover {
+            background: #f6e1fb;
+            color: #a85d6a;
+        }
+        @media (max-width: 750px) {
             .collection-list {
                 flex-direction: column;
-                gap: 15px;
+                gap: 16px;
                 align-items: center;
             }
             .card, .activity-card {
-                min-width: 94vw;
+                min-width: 92vw;
                 width: 97vw;
             }
         }
@@ -111,16 +109,13 @@
     <div class="collection-list">
         {% for col in collections %}
         <div class="card">
-            <a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a>
-            <div class="card-btn-row">
-                <a href="{{ url_for('view_collection', collection=col) }}" class="func-btn">檔案列表</a>
-                <a href="/firebase/query_date" class="func-btn">日期查詢</a>
-            </div>
+            <div class="card-title">{{ col }}</div>
+            <a class="card-btn" href="{{ url_for('view_collection', collection=col) }}">檔案列表</a>
         </div>
         {% endfor %}
         <div class="activity-card">
-            📊 活動量比對專區
-            <a href="/firebase/query_date">前往活動比對頁面</a>
+            <span style="font-size:1.18em;">📊 活動量比對專區</span>
+            <a class="card-btn" href="/firebase/query_date">前往活動比對頁面</a>
         </div>
     </div>
 </body>
