@@ -6,38 +6,103 @@
     <title>Firebase 資料瀏覽</title>
     <style>
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
+            font-family: "Noto Sans TC", "微軟正黑體", Arial, sans-serif;
             background-color: #f4f6f8;
             padding: 20px;
-            text-align: center;
         }
         h1 {
             color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 20px;
+            margin-bottom: 22px;
+            font-size: 1.25rem;
+            text-align: center;
+            letter-spacing: 1px;
         }
         .collection-list {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
+            gap: 18px;
+            margin-bottom: 20px;
         }
         .card {
             background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 15px 20px;
-            min-width: 140px;
-            transition: transform 0.2s;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            padding: 20px 24px 16px 24px;
+            min-width: 148px;
+            transition: transform 0.18s;
+            text-align: center;
         }
         .card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-4px);
         }
         .card a {
             text-decoration: none;
             color: #2d89ef;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 1.12rem;
+            letter-spacing: 1px;
+        }
+        .card-btn-row {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .func-btn {
+            display: inline-block;
+            background: linear-gradient(90deg,#e0c3fc,#8ec5fc 100%);
+            color: #222;
+            border-radius: 8px;
+            padding: 5px 14px;
+            text-decoration: none;
+            font-size: 0.96rem;
+            margin-top: 2px;
+            font-weight: 500;
+            transition: background 0.13s;
+        }
+        .func-btn:hover {
+            background: linear-gradient(90deg,#a1c4fd 0%, #c2e9fb 100%);
+            color: #135;
+        }
+        .activity-card {
+            background: linear-gradient(100deg,#fbc2eb 0%, #a6c1ee 100%);
+            color: #222;
+            border-radius: 18px;
+            box-shadow: 0 2px 14px rgba(244,143,177,0.07);
+            padding: 18px 26px 16px 26px;
+            min-width: 148px;
+            font-weight: bold;
+            font-size: 1.09rem;
+            text-align: center;
+            transition: transform 0.16s;
+        }
+        .activity-card a {
+            display: block;
+            margin-top: 7px;
+            font-size: 1.02rem;
+            background: #fff7;
+            color: #2f80ed;
+            border-radius: 7px;
+            padding: 5px 12px;
+            text-decoration: none;
+            transition: background 0.13s, color 0.13s;
+            font-weight: 500;
+        }
+        .activity-card a:hover {
+            background: #fff;
+            color: #b03a5b;
+        }
+        @media (max-width: 650px) {
+            .collection-list {
+                flex-direction: column;
+                gap: 15px;
+                align-items: center;
+            }
+            .card, .activity-card {
+                min-width: 94vw;
+                width: 97vw;
+            }
         }
     </style>
 </head>
@@ -47,9 +112,16 @@
         {% for col in collections %}
         <div class="card">
             <a href="{{ url_for('view_collection', collection=col) }}">{{ col }}</a>
-            <a href="/firebase/query_date">日期查詢</a>
+            <div class="card-btn-row">
+                <a href="{{ url_for('view_collection', collection=col) }}" class="func-btn">檔案列表</a>
+                <a href="/firebase/query_date" class="func-btn">日期查詢</a>
+            </div>
         </div>
         {% endfor %}
+        <div class="activity-card">
+            📊 活動量比對專區
+            <a href="/firebase/query_date">前往活動比對頁面</a>
+        </div>
     </div>
 </body>
 </html>
