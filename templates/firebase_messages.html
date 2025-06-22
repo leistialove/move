@@ -13,7 +13,8 @@
         h1 {
             color: #2c3e50;
             text-align: center;
-            font-size: 1.14rem;
+            font-size: 1.15rem;
+            margin-bottom: 18px;
         }
         .table-container {
             overflow-x: auto;
@@ -28,12 +29,12 @@
         }
         th, td {
             padding: 12px;
-            border: 1px solid #d5e4f7;
+            border: 1px solid #2196f3;
             text-align: left;
-            font-size: 14px;
+            font-size: 15px;
         }
         th {
-            background-color: #2d89ef;
+            background-color: #2196f3;
             color: white;
         }
         tr:hover {
@@ -61,7 +62,7 @@
     </style>
 </head>
 <body>
-    <h1>🗂️ {{ collection }} / {{ doc_id }} 的訊息記錄</h1>
+    <h1>📁 {{ collection }} / {{ doc_id }} 的訊息記錄</h1>
     <div class="table-container">
         <table>
             <thead>
@@ -73,18 +74,26 @@
                 </tr>
             </thead>
             <tbody>
-                {% for msg in messages %}
-                <tr>
-                    <td>{{ msg.id }}</td>
-                    <td>{{ msg.timestamp or '-' }}</td>
-                    <td>{{ msg.content or '-' }}</td>
-                    <td>
-                        <a class="delete-link"
-                           href="{{ url_for('delete_message', collection=collection, doc_id=doc_id, msg_id=msg.id) }}"
-                           onclick="return confirm('確定要刪除這則訊息嗎？')">刪除</a>
-                    </td>
-                </tr>
-                {% endfor %}
+                {% if messages %}
+                    {% for msg in messages %}
+                    <tr>
+                        <td>{{ msg.id }}</td>
+                        <td>{{ msg.timestamp or '-' }}</td>
+                        <td>{{ msg.content or '-' }}</td>
+                        <td>
+                            <a class="delete-link"
+                               href="{{ url_for('delete_message', collection=collection, doc_id=doc_id, msg_id=msg.id) }}"
+                               onclick="return confirm('確定要刪除這則訊息嗎？')">刪除</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; color:#b0b0b0; font-size:1.09em; padding:28px 0;">
+                            目前無資料
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
