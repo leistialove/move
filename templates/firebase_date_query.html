@@ -2,62 +2,200 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>活動紀錄比對</title>
+  <title>日期活動量比對</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Noto Sans TC", "微軟正黑體", Arial, sans-serif;
+      background: #f7f8fa;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 480px;
+      margin: 32px auto;
+      padding: 16px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    h2 {
+      text-align: center;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      margin-top: 0;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      justify-content: center;
+      align-items: center;
+    }
+    .form-row label {
+      font-size: 1rem;
+    }
+    input[type="date"] {
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 3px 6px;
+    }
+    button {
+      font-size: 1rem;
+      padding: 6px 16px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg,#56ccf2 0%, #2f80ed 100%);
+      color: #fff;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:active {
+      background: #2f80ed;
+    }
+    #chart-div {
+      width: 100%;
+      min-height: 260px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+    }
+    #compareChart {
+      width: 100% !important;
+      max-width: 100%;
+      height: 320px !important;
+    }
+    .data-table {
+      margin-top: 18px;
+      width: 100%;
+      background: #f3f8fd;
+      border-radius: 10px;
+      font-size: 1rem;
+      overflow-x: auto;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .data-table th, .data-table td {
+      padding: 7px 6px;
+      text-align: center;
+    }
+    .data-table th {
+      background: #d6eaff;
+      color: #204067;
+      font-weight: bold;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 8px;
+        padding: 6vw 2vw;
+        border-radius: 12px;
+      }
+      h2 { font-size: 1.15rem; }
+      #compareChart { height: 240px !important; }
+      .data-table { font-size: 0.96rem; }
+    }
+  </style>
 </head>
 <body>
-  <h2>選擇兩個日期比對活動量</h2>
-  <form id="compare-form">
-    <label>日期1：<input type="date" id="date1" required></label>
-    <label>日期2：<input type="date" id="date2" required></label>
-    <button type="submit">比對</button>
-  </form>
-  <div>
-    <canvas id="compareChart" width="600" height="400"></canvas>
+  <div class="container">
+    <h2>選擇兩個日期比對活動量</h2>
+    <form id="compare-form" autocomplete="off">
+      <div class="form-row">
+        <label>日期1：<input type="date" id="date1" required></label>
+        <label>日期2：<input type="date" id="date2" required></label>
+        <button type="submit">比對</button>
+      </div>
+    </form>
+    <div id="chart-div">
+      <canvas id="compareChart"></canvas>
+    </div>
+    <div id="compare-data"></div>
   </div>
-  <div id="compare-data"></div>
 
   <script>
     let chartInstance = null;
+
+    // 自動補今天
+    window.onload = function(){
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('date1').value = today;
+      document.getElementById('date2').value = today;
+    };
+
     document.getElementById('compare-form').onsubmit = async function(e){
       e.preventDefault();
       const d1 = document.getElementById('date1').value;
       const d2 = document.getElementById('date2').value;
+      if(!d1 || !d2) return;
+
+      document.getElementById('compare-data').innerHTML = "查詢中...";
+
       const res = await fetch(`/api/compare_chart?date1=${d1}&date2=${d2}`);
       const data = await res.json();
       if(data.error){
         document.getElementById('compare-data').innerText = data.error;
         return;
       }
+
       const labels = ["站立", "坐下", "躺下", "移動"];
       const v1 = [data.sum1["站立"], data.sum1["坐下"], data.sum1["躺下"], data.sum1["移動"]];
       const v2 = [data.sum2["站立"], data.sum2["坐下"], data.sum2["躺下"], data.sum2["移動"]];
 
+      // Chart.js 畫圖
       const ctx = document.getElementById('compareChart').getContext('2d');
-      if(chartInstance) chartInstance.destroy(); // 清掉舊的
+      if(chartInstance) chartInstance.destroy();
       chartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: labels,
           datasets: [
-            { label: d1, data: v1, backgroundColor: 'rgba(75,192,192,0.6)' },
-            { label: d2, data: v2, backgroundColor: 'rgba(255,99,132,0.6)' }
+            {
+              label: data.date1,
+              data: v1,
+              backgroundColor: 'rgba(93, 173, 226,0.88)'
+            },
+            {
+              label: data.date2,
+              data: v2,
+              backgroundColor: 'rgba(244, 143, 177,0.80)'
+            }
           ]
         },
         options: {
-          responsive: false,
+          responsive: true,
           plugins: {
-            legend: { position: 'top' }
+            legend: { position: 'top', labels: { font: { size: 16 } } },
+            tooltip: { enabled: true, mode: 'index' }
           },
           scales: {
-            y: { beginAtZero: true }
+            x: { ticks: { font: { size: 16 } } },
+            y: { beginAtZero: true, ticks: { font: { size: 14 } } }
           }
         }
       });
 
-      // 也可印出數據
+      // 美化數據表格
       document.getElementById('compare-data').innerHTML =
-        `<pre>${d1}：${JSON.stringify(data.sum1, null, 2)}\n${d2}：${JSON.stringify(data.sum2, null, 2)}</pre>`;
+        `<table class="data-table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th>${data.date1}</th>
+              <th>${data.date2}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>站立</td><td>${Math.round(v1[0])}</td><td>${Math.round(v2[0])}</td></tr>
+            <tr><td>坐下</td><td>${Math.round(v1[1])}</td><td>${Math.round(v2[1])}</td></tr>
+            <tr><td>躺下</td><td>${Math.round(v1[2])}</td><td>${Math.round(v2[2])}</td></tr>
+            <tr><td>移動</td><td>${Math.round(v1[3])}</td><td>${Math.round(v2[3])}</td></tr>
+          </tbody>
+        </table>`;
     }
   </script>
 </body>
