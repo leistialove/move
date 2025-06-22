@@ -721,6 +721,38 @@ def api_query_records():
 
     return jsonify(result)
 
+@app.route('/api/compare_chart')
+def api_compare_chart():
+    date1 = request.args.get('date1')
+    date2 = request.args.get('date2')
+    tz = timezone(timedelta(hours=8))
+    if not date1 or not date2:
+        return jsonify({"error": "請選擇兩個日期"}), 400
+
+    def summarize(date_str):
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        start = datetime(dt.year, dt.month, dt.day, 0, 0, 0, tzinfo=tz)
+        end = start + timedelta(days=1)
+        docs = db.collection_group("records") \
+            .where("timestamp", ">=", start) \
+            .where("timestamp", "<", end) \
+            .stream()
+        records = [d.to_dict() for d in docs]
+        return {
+            "站立": sum(r.get("standing_time", 0) for r in records),
+            "坐下": sum(r.get("sitting_time", 0) for r in records),
+            "躺下": sum(r.get("lying_time", 0) for r in records),
+            "移動": sum(r.get("moving_time", 0) for r in records)
+        }
+
+    sum1 = summarize(date1)
+    sum2 = summarize(date2)
+
+    return jsonify({
+        "date1": date1, "sum1": sum1,
+        "date2": date2, "sum2": sum2
+    })
+
 @app.route('/firebase/view/<collection>')
 def view_collection(collection):
     docs = db.collection(collection).stream()
