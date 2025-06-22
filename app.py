@@ -153,8 +153,8 @@ def handle_message(event):
         "height": "sm",
         "action": {
           "type": "postback",
-          "label": "10分鐘",
-          "data": "report_10"
+          "label": "1分鐘",
+          "data": "report_1"
         }
       },
       {
@@ -450,7 +450,7 @@ def handle_postback(event):
     user_id = event.source.user_id
     
     duration_map = {
-        "report_10": 10,
+        "report_1": 1,
         "report_30": 30,
         "report_60": 60
     }
