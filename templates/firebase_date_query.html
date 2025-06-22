@@ -74,7 +74,7 @@
     .data-table {
       margin-top: 18px;
       width: 100%;
-      background: #f3f8fd;
+      background: #eaf5ff;
       border-radius: 10px;
       font-size: 1rem;
       overflow-x: auto;
@@ -85,9 +85,17 @@
       text-align: center;
     }
     .data-table th {
-      background: #d6eaff;
+      background: #b5dafd;
       color: #204067;
       font-weight: bold;
+    }
+    .unit-tip {
+      text-align: right;
+      font-size: 0.95em;
+      color: #888;
+      margin-top: -7px;
+      margin-bottom: 7px;
+      margin-right: 2px;
     }
     @media (max-width: 600px) {
       .container {
@@ -96,7 +104,7 @@
         border-radius: 12px;
       }
       h2 { font-size: 1.15rem; }
-      #compareChart { height: 240px !important; }
+      #compareChart { height: 220px !important; }
       .data-table { font-size: 0.96rem; }
     }
   </style>
@@ -114,6 +122,7 @@
     <div id="chart-div">
       <canvas id="compareChart"></canvas>
     </div>
+    <div class="unit-tip" id="unit-tip">單位：分鐘</div>
     <div id="compare-data"></div>
   </div>
 
@@ -126,6 +135,12 @@
       document.getElementById('date1').value = today;
       document.getElementById('date2').value = today;
     };
+
+    // 秒轉分鐘（1 位小數）
+    function toMinutes(val) {
+      if (!val || isNaN(val)) return "0";
+      return (val / 60).toFixed(1);
+    }
 
     document.getElementById('compare-form').onsubmit = async function(e){
       e.preventDefault();
@@ -143,10 +158,11 @@
       }
 
       const labels = ["站立", "坐下", "躺下", "移動"];
-      const v1 = [data.sum1["站立"], data.sum1["坐下"], data.sum1["躺下"], data.sum1["移動"]];
-      const v2 = [data.sum2["站立"], data.sum2["坐下"], data.sum2["躺下"], data.sum2["移動"]];
+      // 轉成分鐘
+      const v1 = [data.sum1["站立"], data.sum1["坐下"], data.sum1["躺下"], data.sum1["移動"]].map(toMinutes);
+      const v2 = [data.sum2["站立"], data.sum2["坐下"], data.sum2["躺下"], data.sum2["移動"]].map(toMinutes);
 
-      // Chart.js 畫圖
+      // Chart.js 畫圖（y 軸加 "分鐘" 單位）
       const ctx = document.getElementById('compareChart').getContext('2d');
       if(chartInstance) chartInstance.destroy();
       chartInstance = new Chart(ctx, {
@@ -169,17 +185,29 @@
         options: {
           responsive: true,
           plugins: {
-            legend: { position: 'top', labels: { font: { size: 16 } } },
-            tooltip: { enabled: true, mode: 'index' }
+            legend: { position: 'top', labels: { font: { size: 15 } } },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${context.parsed.y} 分鐘`
+              }
+            }
           },
           scales: {
-            x: { ticks: { font: { size: 16 } } },
-            y: { beginAtZero: true, ticks: { font: { size: 14 } } }
+            x: { ticks: { font: { size: 15 } } },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "分鐘" },
+              ticks: {
+                font: { size: 13 },
+                callback: function(value) { return value + " 分"; }
+              }
+            }
           }
         }
       });
 
-      // 美化數據表格
+      // 美化數據表格（分鐘，1 位小數）
       document.getElementById('compare-data').innerHTML =
         `<table class="data-table">
           <thead>
@@ -190,12 +218,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>站立</td><td>${Math.round(v1[0])}</td><td>${Math.round(v2[0])}</td></tr>
-            <tr><td>坐下</td><td>${Math.round(v1[1])}</td><td>${Math.round(v2[1])}</td></tr>
-            <tr><td>躺下</td><td>${Math.round(v1[2])}</td><td>${Math.round(v2[2])}</td></tr>
-            <tr><td>移動</td><td>${Math.round(v1[3])}</td><td>${Math.round(v2[3])}</td></tr>
+            <tr><td>站立</td><td>${v1[0]}</td><td>${v2[0]}</td></tr>
+            <tr><td>坐下</td><td>${v1[1]}</td><td>${v2[1]}</td></tr>
+            <tr><td>躺下</td><td>${v1[2]}</td><td>${v2[2]}</td></tr>
+            <tr><td>移動</td><td>${v1[3]}</td><td>${v2[3]}</td></tr>
           </tbody>
         </table>`;
+      document.getElementById('unit-tip').innerText = "單位：分鐘";
     }
   </script>
 </body>
