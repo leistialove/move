@@ -8,44 +8,61 @@
         body {
             font-family: "Noto Sans TC", "微軟正黑體", Arial, sans-serif;
             background-color: #f9fafb;
-            padding: 20px;
+            padding: 22px;
             text-align: center;
         }
         h1 {
             color: #34495e;
-            margin-bottom: 20px;
-            font-size: 20px;
+            margin-bottom: 24px;
+            font-size: 1.15rem;
         }
         .doc-list {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
+            gap: 16px;
         }
         .doc-card {
             background: white;
-            border-radius: 11px;
-            box-shadow: 0 2px 7px rgba(80,180,230,0.10);
-            padding: 13px 22px;
-            min-width: 138px;
-            transition: transform 0.18s;
+            border-radius: 13px;
+            box-shadow: 0 2px 7px rgba(80,180,230,0.09);
+            padding: 20px 10px 13px 10px;
+            min-width: 132px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.14s;
         }
         .doc-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-4px);
         }
-        .doc-card a {
-            color: #27ae60;
+        .doc-btn {
+            background: linear-gradient(90deg,#a1c4fd,#c2e9fb);
+            color: #186a3b;
+            font-size: 1.02rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 0;
+            min-width: 98px;
+            width: 100%;
+            cursor: pointer;
             text-decoration: none;
-            font-size: 15px;
-            font-weight: bold;
+            box-shadow: 0 1px 4px #eee;
+            transition: background 0.13s, color 0.13s;
+            margin-top: 7px;
+        }
+        .doc-btn:hover {
+            background: linear-gradient(90deg,#c2e9fb,#a1c4fd);
+            color: #154360;
         }
         .back {
-            margin-top: 20px;
+            margin-top: 28px;
         }
         .back a {
             color: #888;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 1.03rem;
         }
     </style>
 </head>
@@ -54,7 +71,8 @@
     <div class="doc-list">
         {% for doc in records %}
         <div class="doc-card">
-            <a href="{{ url_for('view_messages', collection=collection, doc_id=doc.id) }}">{{ doc.id }}</a>
+            <div style="font-size:1.07rem;color:#36a68c;font-weight:bold;margin-bottom:7px;">{{ doc.id }}</div>
+            <a class="doc-btn" href="{{ url_for('view_messages', collection=collection, doc_id=doc.id) }}">查看內容</a>
         </div>
         {% endfor %}
     </div>
