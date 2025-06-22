@@ -353,11 +353,12 @@ def calculate_percentage_change(new_value, old_value):
 
 def generate_posture_step_chart():
     # 🔹 取 Firestore 最近 30 筆資料
-    docs = db.collection("yolo_detections")\
+    # 🔥 拉出所有 /yolo_detections/*/records/* 的資料
+    docs = db.collection_group("records")\
         .order_by("timestamp", direction=firestore.Query.DESCENDING)\
         .limit(30)\
         .stream()
-
+    
     records = list(d.to_dict() for d in docs)
     records = list(reversed(records))  # 舊→新
 
@@ -505,7 +506,10 @@ def get_recent_records(minutes):
         .where("timestamp", ">=", cutoff) \
         .order_by("timestamp", direction=firestore.Query.DESCENDING) \
         .stream()'''
-    docs = db.collection("yolo_detections").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(minutes).stream()
+    docs = db.collection_group("records")\
+    .order_by("timestamp", direction=firestore.Query.DESCENDING)\
+    .limit(minutes)\
+    .stream()
 
     records = []
     for doc in docs:
@@ -588,7 +592,7 @@ def get_goal_progress():
     today = datetime.now(tz).date()
     start = datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=tz)
     end   = start + timedelta(days=1)
-    docs = db.collection("yolo_detections")\
+    docs = db.collection_group("records")\
         .where("timestamp", ">=", start)\
         .where("timestamp", "<", end)\
         .stream()
@@ -604,7 +608,7 @@ def check_and_push_goal():
     today = datetime.now(tz).date()
     start = datetime(today.year, today.month, today.day, 0, 0, 0, tzinfo=tz)
     end = start + timedelta(days=1)
-    docs = db.collection("yolo_detections")\
+    docs = db.collection_group("records")\
         .where("timestamp", ">=", start)\
         .where("timestamp", "<", end)\
         .stream()
