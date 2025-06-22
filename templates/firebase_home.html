@@ -94,14 +94,38 @@
         @media (max-width: 750px) {
             .collection-list {
                 flex-direction: column;
-                gap: 16px;
-                align-items: center;
+                gap: 8px;
+                align-items: stretch;
+                margin-bottom: 0;
             }
             .card, .activity-card {
-                min-width: 92vw;
-                width: 97vw;
+                min-width: 0;
+                width: 96vw;
+                margin: 0 auto 8px auto;
+                padding: 13px 5vw 10px 5vw;
+                box-shadow: 0 1px 5px rgba(80,180,230,0.08);
+            }
+            .card-title {
+                font-size: 1.03rem;
+                margin-bottom: 7px;
+            }
+            .card-btn, .activity-card .card-btn {
+                font-size: 0.98rem;
+                padding: 8px 0;
+                min-width: 80px;
+                border-radius: 13px;
+            }
+            h1 {
+                font-size: 1.09rem;
+                margin-bottom: 13px;
+            }
+            .activity-card {
+                font-size: 1.02rem;
+                padding: 15px 5vw 11px 5vw;
+                margin-bottom: 4px;
             }
         }
+
     </style>
 </head>
 <body>
