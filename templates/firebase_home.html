@@ -91,45 +91,72 @@
             background: #f6e1fb;
             color: #a85d6a;
         }
-        @media (max-width: 750px) {
-            .collection-list {
-                flex-direction: column;
-                gap: 8px;
-                align-items: stretch;
-                margin-bottom: 0;
-            }
-            .card, .activity-card {
-                min-width: 0;
-                width: 96vw;
-                margin: 0 auto 8px auto;
-                padding: 13px 5vw 10px 5vw;
-                box-shadow: 0 1px 5px rgba(80,180,230,0.08);
-            }
-            .card-title {
-                font-size: 1.03rem;
-                margin-bottom: 7px;
-            }
-            .card-btn, .activity-card .card-btn {
-                font-size: 0.98rem;
-                padding: 8px 0;
-                min-width: 80px;
-                border-radius: 13px;
-            }
-            h1 {
-                font-size: 1.09rem;
-                margin-bottom: 13px;
-            }
-            .activity-card {
-                font-size: 1.02rem;
-                padding: 15px 5vw 11px 5vw;
-                margin-bottom: 4px;
-            }
+    @media (max-width: 600px) {
+        body, .container {
+            padding: 6px !important;
+            background: #f4f6f8;
         }
-
+        h1 {
+            font-size: 1.06rem !important;
+            margin-bottom: 12px !important;
+            margin-top: 9px !important;
+        }
+        .collection-list {
+            flex-direction: column;
+            gap: 9px !important;
+            align-items: stretch;
+            margin-bottom: 0 !important;
+            padding: 0 !important;
+        }
+        .card, .activity-card {
+            min-width: 0;
+            width: 92vw !important;
+            margin: 0 auto 9px auto !important;
+            padding: 11px 3vw 7px 3vw !important;
+            border-radius: 17px !important;
+            box-shadow: 0 1px 6px rgba(80,180,230,0.10);
+        }
+        .card-title {
+            font-size: 1.01rem !important;
+            margin-bottom: 8px !important;
+            letter-spacing: 0.2px;
+        }
+        .card-btn, .activity-card .card-btn {
+            font-size: 0.97rem !important;
+            padding: 7px 0 !important;
+            min-width: 80px !important;
+            width: 75vw !important;
+            max-width: 97vw;
+            border-radius: 13px !important;
+            margin: 0 auto 2px auto !important;
+            background: #f7fafc !important;
+            box-shadow: 0 1px 4px #eee;
+            color: #226;
+        }
+        .card-btn:active, .card-btn:hover {
+            background: #e3e9f3 !important;
+            color: #b03a5b;
+        }
+        .activity-card {
+            font-size: 1.02rem !important;
+            background: linear-gradient(120deg,#fbc2eb 0%, #a6c1ee 100%) !important;
+            padding: 14px 4vw 12px 4vw !important;
+            margin-bottom: 7px !important;
+            border-radius: 17px !important;
+        }
+        .activity-card .card-btn {
+            background: #fff !important;
+            color: #397bce !important;
+            border-radius: 11px !important;
+            width: 70vw !important;
+            padding: 8px 0 !important;
+        }
+    }
+        
     </style>
 </head>
 <body>
-    <h1>🔥 可用的 Firebase Collections 🔥</h1>
+    <h1>室內活動分析系統</h1>
     <div class="collection-list">
         {% for col in collections %}
         <div class="card">
