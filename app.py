@@ -689,6 +689,37 @@ def firebase_home():
     names = [c.id for c in db.collections() if c.id not in exclude]
     return render_template('firebase_home.html', collections=names)
 
+@app.route('/firebase/query_date')
+def query_date_page():
+    # 回傳日期查詢網頁
+    return render_template('firebase_date_query.html')
+
+@app.route('/api/query_records')
+def api_query_records():
+    # 取得前端傳來的日期（YYYY-MM-DD字串）
+    date1 = request.args.get('date1')
+    date2 = request.args.get('date2')
+    tz = timezone(timedelta(hours=8))
+
+    if not date1:
+        return jsonify({"error": "請選擇至少一個日期"}), 400
+
+    def date_range_records(date_str):
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        start = datetime(dt.year, dt.month, dt.day, 0, 0, 0, tzinfo=tz)
+        end = start + timedelta(days=1)
+        docs = db.collection_group("records")\
+            .where("timestamp", ">=", start)\
+            .where("timestamp", "<", end)\
+            .stream()
+        return [d.to_dict() for d in docs]
+
+    result = {"date1": date1, "records1": date_range_records(date1)}
+    if date2:
+        result["date2"] = date2
+        result["records2"] = date_range_records(date2)
+
+    return jsonify(result)
 
 @app.route('/firebase/view/<collection>')
 def view_collection(collection):
