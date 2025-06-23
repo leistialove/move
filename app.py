@@ -106,20 +106,21 @@ def handle_message(event):
     global user_set_goal_state
     if user_set_goal_state.get("waiting", False):
         try:
-            target_sec = int(user_text.strip())
+            target_min = int(user_text.strip())  # 取得使用者輸入的分鐘數
+            target_sec = target_min * 60         # 轉換為秒
             db.collection("profile").document("target").set({"moving_time_target": target_sec})
             user_set_goal_state["waiting"] = False
             messaging_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
-                    messages=[TextMessage(text=f"今日目標已設定為 {target_sec} 秒！")]
+                    messages=[TextMessage(text=f"今日目標已設定為 {target_min} 分！")]
                 )
             )
         except:
             messaging_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
-                    messages=[TextMessage(text="請輸入正確的數字，例如：1800")]
+                    messages=[TextMessage(text="請輸入正確的數字，例如：60")]
                 )
             )
         return
@@ -153,8 +154,8 @@ def handle_message(event):
         "height": "sm",
         "action": {
           "type": "postback",
-          "label": "1小時",
-          "data": "report_60"
+          "label": "1分鐘",
+          "data": "report_1"
         }
       },
       {
@@ -288,7 +289,7 @@ def handle_message(event):
     elif user_text == "聯絡照顧者":
         bot_reply = user_text
         notify_msg = f"⚠️ 使用者主動聯絡照顧者！請儘速確認安全狀況！"
-        caregiver_user_id = 'Uce4b2cb2114bfcb00ea533f77c3a3d6d'  # ← 記得換成實際照顧者 ID
+        caregiver_user_id = 'U2956b29f5d4e2602e49ad84f7bac5e05'  # ← 記得換成實際照顧者 ID
         
         # 發送推播訊息給照顧者
         push_message_request = PushMessageRequest(
@@ -450,7 +451,7 @@ def handle_postback(event):
     user_id = event.source.user_id
     
     duration_map = {
-        "report_60": 60,
+        "report_1": 1,
         "report_720": 720,
         "report_1440": 1440
     }
@@ -479,7 +480,7 @@ def handle_postback(event):
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=reply_token,
-                messages=[TextMessage(text="請輸入今日目標秒數（例如：1800）")]
+                messages=[TextMessage(text="請輸入今日目標分鐘（例如：60）")]
             )
         )
         return
