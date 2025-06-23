@@ -109,7 +109,45 @@
       background: #e1e6ea;
       color: #1a3355;
     }
-    @media (max-width: 600px) {
+    /* ======================= 表格美化 ======================= */
+    .data-table {
+      width: 96%;
+      max-width: 390px;
+      margin: 18px auto 0 auto;
+      background: #f8fafc;
+      border-radius: 13px;
+      box-shadow: 0 1px 8px #eee;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      font-size: 1.04em;
+    }
+    .data-table th, .data-table td {
+      padding: 11px 7px;
+      text-align: center;
+    }
+    .data-table th {
+      background: linear-gradient(90deg, #70b9e4 0%, #cce7fa 100%);
+      color: #234;
+      font-size: 1.09em;
+      letter-spacing: 1px;
+      font-weight: bold;
+    }
+    .data-table tr:nth-child(even) {
+      background: #f0f3f9;
+    }
+    .data-table tr:nth-child(odd) {
+      background: #fff;
+    }
+    .data-table td {
+      color: #34495e;
+      font-size: 1.02em;
+      border-bottom: 1px solid #ececec;
+    }
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    @media (max-width:600px) {
       .container {
         margin: 7px;
         padding: 7vw 2vw;
@@ -121,8 +159,17 @@
       .unit-tip { font-size: 0.93em; }
       .back-btn-area { margin-top: 14px; }
       .back-btn { font-size: 0.96rem; padding: 7px 16px; }
+      .data-table {
+        font-size: 0.98em;
+        max-width: 97vw;
+        margin: 12px auto;
+      }
+      .data-table th, .data-table td {
+        padding: 8px 3px;
+      }
     }
   </style>
+
 </head>
 <body>
   <div class="container">
