@@ -9,6 +9,7 @@
             font-family: "Noto Sans TC", "微軟正黑體", Arial, sans-serif;
             background-color: #f4f6f8;
             padding: 24px;
+            margin: 0;
         }
         h1 {
             color: #2c3e50;
@@ -21,8 +22,14 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: flex-start;
             gap: 22px;
             margin-bottom: 22px;
+            width: 100%;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
         }
         .card {
             background: #fff;
@@ -36,6 +43,7 @@
             flex-direction: column;
             align-items: center;
             gap: 9px;
+            box-sizing: border-box;
         }
         .card:hover {
             transform: translateY(-5px) scale(1.015);
@@ -80,79 +88,88 @@
             flex-direction: column;
             align-items: center;
             gap: 9px;
+            box-sizing: border-box;
         }
         .activity-card .card-btn {
             background: #fff;
             color: #397bce;
             font-size: 1.01rem;
             font-weight: 600;
+            width: 100%;
         }
         .activity-card .card-btn:hover {
             background: #f6e1fb;
             color: #a85d6a;
         }
-    @media (max-width: 600px) {
-        body, .container {
-            padding: 6px !important;
-            background: #f4f6f8;
+        @media (max-width: 600px) {
+            body {
+                padding: 6px !important;
+                background: #f4f6f8;
+            }
+            h1 {
+                font-size: 1.06rem !important;
+                margin-bottom: 12px !important;
+                margin-top: 9px !important;
+            }
+            .collection-list {
+                flex-direction: column;
+                gap: 13px !important;
+                align-items: center;
+                margin-bottom: 0 !important;
+                padding: 0 !important;
+                width: 100vw !important;
+                max-width: 100vw !important;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .card, .activity-card {
+                min-width: 0 !important;
+                width: 97vw !important;
+                margin: 0 auto 9px auto !important;
+                padding: 12px 3vw 10px 3vw !important;
+                border-radius: 17px !important;
+                box-shadow: 0 1px 6px rgba(80,180,230,0.10);
+                align-items: center;
+                box-sizing: border-box;
+            }
+            .card-title {
+                font-size: 1.01rem !important;
+                margin-bottom: 8px !important;
+                letter-spacing: 0.2px;
+            }
+            .card-btn, .activity-card .card-btn {
+                font-size: 0.97rem !important;
+                padding: 7px 0 !important;
+                min-width: 80px !important;
+                width: 90vw !important;
+                max-width: 97vw;
+                border-radius: 13px !important;
+                margin: 0 auto 2px auto !important;
+                background: #f7fafc !important;
+                box-shadow: 0 1px 4px #eee;
+                color: #226;
+                box-sizing: border-box;
+            }
+            .card-btn:active, .card-btn:hover {
+                background: #e3e9f3 !important;
+                color: #b03a5b;
+            }
+            .activity-card {
+                font-size: 1.02rem !important;
+                background: linear-gradient(120deg,#fbc2eb 0%, #a6c1ee 100%) !important;
+                padding: 14px 4vw 12px 4vw !important;
+                margin-bottom: 7px !important;
+                border-radius: 17px !important;
+            }
+            .activity-card .card-btn {
+                background: #fff !important;
+                color: #397bce !important;
+                border-radius: 11px !important;
+                width: 87vw !important;
+                padding: 8px 0 !important;
+                box-sizing: border-box;
+            }
         }
-        h1 {
-            font-size: 1.06rem !important;
-            margin-bottom: 12px !important;
-            margin-top: 9px !important;
-        }
-        .collection-list {
-            flex-direction: column;
-            gap: 9px !important;
-            align-items: stretch;
-            margin-bottom: 0 !important;
-            padding: 0 !important;
-        }
-        .card, .activity-card {
-            min-width: 0;
-            width: 92vw !important;
-            margin: 0 auto 9px auto !important;
-            padding: 11px 3vw 7px 3vw !important;
-            border-radius: 17px !important;
-            box-shadow: 0 1px 6px rgba(80,180,230,0.10);
-        }
-        .card-title {
-            font-size: 1.01rem !important;
-            margin-bottom: 8px !important;
-            letter-spacing: 0.2px;
-        }
-        .card-btn, .activity-card .card-btn {
-            font-size: 0.97rem !important;
-            padding: 7px 0 !important;
-            min-width: 80px !important;
-            width: 75vw !important;
-            max-width: 97vw;
-            border-radius: 13px !important;
-            margin: 0 auto 2px auto !important;
-            background: #f7fafc !important;
-            box-shadow: 0 1px 4px #eee;
-            color: #226;
-        }
-        .card-btn:active, .card-btn:hover {
-            background: #e3e9f3 !important;
-            color: #b03a5b;
-        }
-        .activity-card {
-            font-size: 1.02rem !important;
-            background: linear-gradient(120deg,#fbc2eb 0%, #a6c1ee 100%) !important;
-            padding: 14px 4vw 12px 4vw !important;
-            margin-bottom: 7px !important;
-            border-radius: 17px !important;
-        }
-        .activity-card .card-btn {
-            background: #fff !important;
-            color: #397bce !important;
-            border-radius: 11px !important;
-            width: 70vw !important;
-            padding: 8px 0 !important;
-        }
-    }
-        
     </style>
 </head>
 <body>
