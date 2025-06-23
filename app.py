@@ -153,28 +153,28 @@ def handle_message(event):
         "height": "sm",
         "action": {
           "type": "postback",
-          "label": "1分鐘",
-          "data": "report_1"
-        }
-      },
-      {
-        "type": "button",
-        "style": "link",
-        "height": "sm",
-        "action": {
-          "type": "postback",
-          "label": "30分鐘",
-          "data": "report_30"
-        }
-      },
-      {
-        "type": "button",
-        "style": "link",
-        "height": "sm",
-        "action": {
-          "type": "postback",
           "label": "1小時",
           "data": "report_60"
+        }
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "height": "sm",
+        "action": {
+          "type": "postback",
+          "label": "12小時",
+          "data": "report_720"
+        }
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "height": "sm",
+        "action": {
+          "type": "postback",
+          "label": "24小時",
+          "data": "report_1440"
         }
       }
     ],
@@ -450,9 +450,9 @@ def handle_postback(event):
     user_id = event.source.user_id
     
     duration_map = {
-        "report_1": 1,
-        "report_30": 30,
-        "report_60": 60
+        "report_60": 60,
+        "report_720": 720,
+        "report_1440": 1440
     }
 
     if postback_data in duration_map:
@@ -486,7 +486,11 @@ def handle_postback(event):
 
     if postback_data == "check_progress":
         total, target, percent, left_sec = get_goal_progress()
-        msg = f"已累積活動 {int(total)} 秒 / 目標 {target} 秒\n進度 {percent:.1f}%\n還差 {int(left_sec)} 秒"
+        msg = (
+            f"已累積活動 {format_seconds(total)} / 目標 {format_seconds(target)}\n"
+            f"進度 {percent:.1f}%\n"
+            f"還差 {format_seconds(left_sec)}"
+        )
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=reply_token,
@@ -556,7 +560,19 @@ def generate_chart_image(summary, minutes):
             'fontsize': 22
         }
     )
-    plt.title(f"{minutes} 分鐘內站坐躺分佈", fontproperties=font_prop, fontsize=32)
+
+    # 產生 title
+    if minutes == 60:
+        title_str = "1小時內站坐躺分佈"
+    elif minutes == 720:
+        title_str = "12小時內站坐躺分佈"
+    elif minutes == 1440:
+        title_str = "24小時內站坐躺分佈"
+    else:
+        title_str = f"{minutes} 分鐘內站坐躺分佈"
+
+    plt.title(title_str, fontproperties=font_prop, fontsize=32)
+
     summary_text = f"站：{summary['站立秒數']:.0f} 秒 坐：{summary['坐下秒數']:.0f} 秒 躺：{summary['躺下秒數']:.0f} 秒"
 
     plt.figtext(
@@ -585,6 +601,17 @@ def generate_chart_image(summary, minutes):
     plt.close()
     return save_path
 #活動程度===============================
+def format_seconds(sec):
+    h = int(sec // 3600)
+    m = int((sec % 3600) // 60)
+    s = int(sec % 60)
+    if h > 0:
+        return f"{h}小時{m}分{s}秒"
+    elif m > 0:
+        return f"{m}分{s}秒"
+    else:
+        return f"{s}秒"
+
 def get_goal_progress():
     tz = timezone(timedelta(hours=8))  # 台灣時區
     target_doc = db.collection("profile").document("target").get()
@@ -645,7 +672,7 @@ def check_and_push_goal():
     log = push_log_doc.to_dict() or {}
     date_key = datetime.now(tz).strftime("%Y%m%d")
     if total >= target and not log.get(date_key, False):
-        msg = f"🎉 恭喜你今日達成活動目標（{int(total)} 秒）！繼續保持！"
+        msg = f"🎉 恭喜你今日達成活動目標（{format_seconds(total)}）！繼續保持！"
         messaging_api.push_message(PushMessageRequest(
             to='Uce4b2cb2114bfcb00ea533f77c3a3d6d',  # 你的UserId
             messages=[TextMessage(text=msg)]
