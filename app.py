@@ -71,7 +71,7 @@ def update_status():
     
     return "OK"
 
-MJPEG_SOURCE = "https://pizza-compile-cats-nutritional.trycloudflare.com/video_feed"  # 換成 cloudflare 給的網址+/video_feed
+MJPEG_SOURCE = "https://lack-centres-focal-considering.trycloudflare.com//video_feed"  # 換成 cloudflare 給的網址+/video_feed
 
 @app.route('/stream')
 def stream():
@@ -113,7 +113,7 @@ def handle_message(event):
             messaging_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
-                    messages=[TextMessage(text=f"今日目標已設定為 {target_min} 分！")]
+                    messages=[TextMessage(text=f"今日目標已設定為 {target_min} 分鐘！")]
                 )
             )
         except:
