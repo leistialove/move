@@ -189,7 +189,7 @@ def handle_message(event):
                 messages=[FlexMessage(altText="坐臥時長-時間選擇",contents=FlexContainer.from_json(line_flex_str))]
           )
         )
-    elif user_text == "活動程度":
+    elif user_text == "活動目標":
         bot_reply = user_text
         activity_menu_flex = {
     "type": "bubble",
