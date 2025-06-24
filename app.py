@@ -71,7 +71,7 @@ def update_status():
     
     return "OK"
 
-MJPEG_SOURCE = "https://authorization-schedule-im-why.trycloudflare.com/video_feed"  # 換成 cloudflare 給的網址+/video_feed
+MJPEG_SOURCE = "https://anyone-is-advertisements-experienced.trycloudflare.com/video_feed"  # 換成 cloudflare 給的網址+/video_feed
 
 @app.route('/stream')
 def stream():
